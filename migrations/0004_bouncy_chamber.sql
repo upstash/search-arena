@@ -1,0 +1,1 @@
+ALTER TABLE "battles" ALTER COLUMN "queries" DROP DEFAULT;

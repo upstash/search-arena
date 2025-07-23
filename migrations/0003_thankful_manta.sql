@@ -1,0 +1,1 @@
+ALTER TABLE "battles" ADD COLUMN "queries" text DEFAULT '' NOT NULL;
