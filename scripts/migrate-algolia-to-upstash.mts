@@ -91,7 +91,7 @@ async function migrateData() {
     while (hasMore) {
       console.log(`Fetching batch ${page + 1}...`);
       // Get records from Algolia using the multi-index search API
-      const { hits, nbPages } = await algoliaClient.browse({
+      const { hits, nbPages } = await algoliaClient.browse<AlgoliaHit>({
         indexName: process.env.ALGOLIA_INDEX!,
         browseParams: {
           page: page,
