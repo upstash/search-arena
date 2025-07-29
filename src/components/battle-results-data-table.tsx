@@ -69,8 +69,8 @@ const useBattleTable = ({
               case "pending":
                 return {
                   variant: "outline" as const,
-                  icon: <Clock className="h-3 w-3" />,
-                  text: "Pending",
+                  icon: <Loader2 className="h-3 w-3 animate-spin" />,
+                  text: "Battle running",
                 };
               case "failed":
                 return {
