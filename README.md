@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Search Arena
+
+A powerful web application for comparing search results from different providers like Upstash, Algolia, and more. Run search battles to evaluate and compare the performance of different search engines with your queries.
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm (recommended) or npm
+- PostgreSQL database
+- Google API Key (for AI features)
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone the repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd search-arena
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Environment Setup
 
-## Learn More
+Create a `.env` file in the root directory with the following variables:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/search_arena"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Google AI
+GOOGLE_API_KEY="your-google-api-key"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Database Setup
 
-## Deploy on Vercel
+Run the database migrations:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm drizzle-kit push
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Start the development server
+
+```bash
+pnpm dev
+```
+
+## Usage
+
+### Adding Search Providers
+
+1. Click "Add Database" to configure a new search provider
+2. Select your provider (Upstash, Algolia, etc.)
+3. Enter credentials in the .env format:
+
+**For Upstash:**
+
+```
+UPSTASH_URL=your-upstash-url
+UPSTASH_TOKEN=your-upstash-token
+UPSTASH_INDEX=your-index-name
+```
+
+**For Algolia:**
+
+```
+ALGOLIA_APPLICATION_ID=your-app-id
+ALGOLIA_API_KEY=your-api-key
+ALGOLIA_INDEX=your-index-name
+```
+
+### Running Search Battles
+
+1. Click "New Battle" to create a search comparison
+2. Select two databases to compare
+3. Add your search queries
+4. Run the battle to see comparative results
+5. View detailed results in the sortable data table
+
+## Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router pages
+├── components/          # Reusable UI components
+├── lib/                 # Utility functions and configurations
+├── server/              # tRPC server and database logic
+└── types/               # TypeScript type definitions
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+## License
+
+This project is private and proprietary.
