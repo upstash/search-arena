@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
+import { after } from "next/server";
 
 // Input validation schemas
 const createBattleSchema = z.object({
@@ -29,19 +30,33 @@ export const battleRouter = router({
   create: publicProcedure
     .input(createBattleSchema)
     .mutation(async ({ ctx, input }) => {
-      return ctx.battleService.createBattle(
+      const { battle, sideEffect } = await ctx.battleService.createBattle(
         input.label,
         input.databaseId1,
         input.databaseId2,
         input.queries
       );
+
+      after(async () => {
+        await sideEffect();
+      });
+
+      return battle;
     }),
 
   // Retry a failed battle
   retry: publicProcedure
     .input(z.object({ battleId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.battleService.retryBattle(input.battleId);
+      const { success, sideEffect } = await ctx.battleService.retryBattle(
+        input.battleId
+      );
+
+      after(async () => {
+        await sideEffect();
+      });
+
+      return { success };
     }),
 
   // Get battle query results

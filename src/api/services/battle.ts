@@ -32,7 +32,7 @@ export class BattleService {
       .returning();
 
     // Create battle queries
-    const battleQueries = await Promise.all(
+    await Promise.all(
       queries
         .split("\n")
         .map((queryText) => queryText.trim())
@@ -49,25 +49,22 @@ export class BattleService {
         })
     );
 
-    // Start the battle process
-    this.processBattle(battle.id, battleQueries).catch((error) => {
-      console.error(`Error processing battle ${battle.id}:`, error);
-      // Update battle status to failed
-      db.update(schema.battles)
-        .set({ status: "failed" })
-        .where(eq(schema.battles.id, battle.id))
-        .execute()
-        .catch((err) => console.error("Failed to update battle status:", err));
-    });
+    const sideEffect = async () => {
+      await this.processBattle(battle.id);
+    };
 
-    return battle;
+    return { battle, sideEffect };
   }
 
   /**
    * Process a battle asynchronously
    */
-  private async processBattle(battleId: string, queries: schema.BattleQuery[]) {
+  async processBattle(battleId: string) {
     try {
+      const queries = await db.query.battleQueries.findMany({
+        where: eq(schema.battleQueries.battleId, battleId),
+      });
+
       // Update battle status to in_progress
       await db
         .update(schema.battles)
@@ -267,18 +264,11 @@ export class BattleService {
       .where(eq(schema.battles.id, battleId))
       .execute();
 
-    // Start the battle process
-    this.processBattle(battleId, battle.queries).catch((error) => {
-      console.error(`Error processing battle ${battleId}:`, error);
-      // Update battle status to failed
-      db.update(schema.battles)
-        .set({ status: "failed" })
-        .where(eq(schema.battles.id, battleId))
-        .execute()
-        .catch((err) => console.error("Failed to update battle status:", err));
-    });
+    const sideEffect = async () => {
+      await this.processBattle(battleId);
+    };
 
-    return { success: true };
+    return { success: true, sideEffect };
   }
 
   /**
