@@ -10,8 +10,10 @@ export function SimpleTooltip({
   content,
 }: {
   children: React.ReactNode;
-  content: React.ReactNode;
+  content?: React.ReactNode;
 }) {
+  if (!content) return children;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
