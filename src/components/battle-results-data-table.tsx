@@ -276,7 +276,7 @@ export function BattleResultsDataTable() {
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
   const { data: battleResults } = trpc.battle.getAll.useQuery(undefined, {
-    refetchInterval: shouldRefetch ? 2000 : undefined,
+    refetchInterval: shouldRefetch ? 4000 : undefined,
   });
   useEffect(() => {
     setShouldRefetch(

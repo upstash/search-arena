@@ -24,33 +24,11 @@ export function BattleResults() {
     data: null,
   });
 
-  const hasInProgressBattles = battleResults?.some(
-    (battle) => battle.status === "in_progress"
-  );
-
-  // Set up automatic refetching for in-progress battles
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-
-    if (hasInProgressBattles) {
-      intervalId = setInterval(() => {
-        utils.battle.getAll.invalidate();
-      }, 3000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [hasInProgressBattles, utils.battle.getAll]);
-
-  if (!battleResults) return "Loading...";
-
   // Determine if we should show a global refetch notification
-  const inProgressCount = battleResults.filter(
-    (b) => b.status === "in_progress"
-  ).length;
+  const inProgressCount =
+    battleResults?.filter(
+      (b) => b.status === "in_progress" || b.status === "pending"
+    ).length ?? 0;
 
   return (
     <div className="space-y-4">
@@ -62,7 +40,12 @@ export function BattleResults() {
           initialData={editBattleData.data || undefined}
         />
       )}
-      <div className="flex justify-between items-start">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="flex justify-between items-start"
+      >
         <div>
           <h2 className="text-xl font-bold text-gray-900">Battle Results</h2>
           <p className="text-sm text-gray-600">Database comparison history</p>
@@ -76,9 +59,9 @@ export function BattleResults() {
             </span>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {battleResults.length === 0 ? (
+      {battleResults?.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
             <motion.div

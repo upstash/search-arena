@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -46,7 +46,6 @@ export function BattleSetupModal({
   onClose,
   initialData,
 }: BattleSetupModalProps) {
-  const isEditing = !!initialData;
   const {
     register,
     handleSubmit,
@@ -63,16 +62,29 @@ export function BattleSetupModal({
   });
   const { data: databases } = trpc.database.getAll.useQuery();
 
+  const memoizedInitialData = useMemo(() => {
+    return {
+      label: initialData?.label,
+      databaseId1: initialData?.databaseId1,
+      databaseId2: initialData?.databaseId2,
+      queries: initialData?.queries,
+    };
+  }, [
+    initialData?.label,
+    initialData?.databaseId1,
+    initialData?.databaseId2,
+    initialData?.queries,
+  ]);
+
   useEffect(() => {
+    // Update the default values
+    reset(memoizedInitialData, {
+      keepValues: true,
+    });
     if (!open) return;
 
-    if (initialData) {
-      reset({
-        label: initialData.label,
-        databaseId1: initialData.databaseId1,
-        databaseId2: initialData.databaseId2,
-        queries: initialData.queries,
-      });
+    if (memoizedInitialData) {
+      reset();
     } else if (
       databases &&
       (databases.length === 2 || databases.length === 1)
@@ -86,7 +98,7 @@ export function BattleSetupModal({
     } else {
       reset();
     }
-  }, [initialData, open, reset, databases]);
+  }, [open, reset, databases, memoizedInitialData]);
 
   const utils = trpc.useUtils();
   const { mutateAsync: createBattle, isPending: isCreating } =

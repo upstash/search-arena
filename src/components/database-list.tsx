@@ -68,7 +68,7 @@ export function DatabaseList() {
       </motion.div>
 
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 min-h-[92px]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
