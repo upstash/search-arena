@@ -1,7 +1,8 @@
 import { db, schema } from "../db";
 import { createSearchProvider } from "../providers";
+import { BattleResult } from "../trpc";
 import { LLMService } from "./llm";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 
 export class BattleService {
   private llmService: LLMService;
@@ -51,6 +52,7 @@ export class BattleService {
 
     const sideEffect = async () => {
       await this.processBattle(battle.id);
+      await this.stopOldBattles();
     };
 
     return { battle, sideEffect };
@@ -181,7 +183,7 @@ export class BattleService {
       // Update battle status to failed
       await db
         .update(schema.battles)
-        .set({ status: "failed" })
+        .set({ status: "failed", error: String(error) })
         .where(eq(schema.battles.id, battleId))
         .execute();
 
@@ -189,11 +191,43 @@ export class BattleService {
     }
   }
 
+  async stopOldBattles() {
+    console.log("Stopping old battles");
+    const battles = await db.query.battles.findMany({
+      where: or(
+        eq(schema.battles.status, "in_progress"),
+        eq(schema.battles.status, "pending")
+      ),
+    });
+
+    if (battles.length !== 0) {
+      console.log(`Stopping ${battles.length} old battles`);
+    }
+
+    for (const battle of battles) {
+      // Timeout a battle if it's been running for more than 10 minutes
+      if (
+        battle.createdAt &&
+        battle.createdAt.getTime() > Date.now() - 10 * 60 * 1000
+      ) {
+        continue;
+      }
+
+      console.log(`Stopping battle ${battle.id}`);
+
+      await db
+        .update(schema.battles)
+        .set({ status: "failed", error: "Battle timed out" })
+        .where(eq(schema.battles.id, battle.id))
+        .execute();
+    }
+  }
+
   /**
    * Get all battles
    */
   async getAllBattles() {
-    return db.query.battles.findMany({
+    return await db.query.battles.findMany({
       orderBy: (battles, { desc }) => [desc(battles.createdAt)],
       with: {
         database1: true,
@@ -206,7 +240,7 @@ export class BattleService {
    * Get battle details by ID
    */
   async getBattleById(battleId: string) {
-    return db.query.battles.findFirst({
+    return await db.query.battles.findFirst({
       where: eq(schema.battles.id, battleId),
       with: {
         database1: true,
@@ -266,6 +300,7 @@ export class BattleService {
 
     const sideEffect = async () => {
       await this.processBattle(battleId);
+      await this.stopOldBattles();
     };
 
     return { success: true, sideEffect };
