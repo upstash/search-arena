@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export const Wrapper = ({ children }: { children: React.ReactNode }) => {
-  const router = useRouter();
   const pathname = usePathname();
   return (
     <div className="min-h-screen bg-gray-50">
@@ -14,15 +14,11 @@ export const Wrapper = ({ children }: { children: React.ReactNode }) => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               {pathname !== "/" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    router.push("/");
-                  }}
-                >
-                  <ArrowLeft size={16} className="mr-2" />
-                  Back
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/">
+                    <ArrowLeft size={16} className="mr-2" />
+                    Back
+                  </Link>
                 </Button>
               )}
               <h1 className="text-xl font-semibold text-gray-900">
