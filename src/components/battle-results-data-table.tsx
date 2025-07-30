@@ -25,10 +25,11 @@ import {
   Edit,
   Loader2,
   Plus,
+  RefreshCw,
   Trophy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { trpc } from "@/api/trpc/client";
 import { BattleResult } from "@/api/trpc";
@@ -89,13 +90,15 @@ const useBattleTable = ({
 
           const config = getStatusConfig(status);
           return (
-            <Badge
-              variant={config.variant}
-              className="text-xs font-medium capitalize"
-            >
-              {config.icon}
-              {config.text}
-            </Badge>
+            <SimpleTooltip content={row.original.error}>
+              <Badge
+                variant={config.variant}
+                className="text-xs font-medium capitalize"
+              >
+                {config.icon}
+                {config.text}
+              </Badge>
+            </SimpleTooltip>
           );
         },
       },
@@ -270,7 +273,20 @@ const useBattleTable = ({
 };
 
 export function BattleResultsDataTable() {
-  const { data: battleResults } = trpc.battle.getAll.useQuery();
+  const utils = trpc.useUtils();
+  const [shouldRefetch, setShouldRefetch] = useState(false);
+  const { data: battleResults } = trpc.battle.getAll.useQuery(undefined, {
+    refetchInterval: shouldRefetch ? 2000 : undefined,
+  });
+  useEffect(() => {
+    setShouldRefetch(
+      battleResults?.some(
+        (battle) =>
+          battle.status === "in_progress" || battle.status === "pending"
+      ) ?? false
+    );
+  }, [battleResults]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBattleId, setEditingBattleId] = useState<string | undefined>(
     undefined
@@ -307,15 +323,29 @@ export function BattleResultsDataTable() {
           className="max-w-sm"
         />
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            setModalOpen(true);
-            setEditingBattleId(undefined);
-          }}
-        >
-          <Plus /> New Battle
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setModalOpen(true);
+              setEditingBattleId(undefined);
+            }}
+          >
+            <Plus /> New Battle
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              utils.battle.getAll.invalidate();
+            }}
+          >
+            {trpc.battle.getAll.useQuery().isFetching ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <RefreshCw />
+            )}
+          </Button>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
