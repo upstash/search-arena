@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/api/trpc/client";
 import { ProviderBadge } from "./provider-badge";
 import { Database } from "@/api/trpc/types";
-import { motion } from "motion/react";
 import { Loader2Icon } from "lucide-react";
 
 interface DatabaseModalProps {

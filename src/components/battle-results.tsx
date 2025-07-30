@@ -3,13 +3,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Loader2 } from "lucide-react";
 import { trpc } from "@/api/trpc/client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { motion } from "motion/react";
 import { BattleResultsDataTable } from "./battle-results-data-table";
 
 export function BattleResults() {
-  const utils = trpc.useUtils();
   const { data: battleResults } = trpc.battle.getAll.useQuery();
   const [editBattleData, setEditBattleData] = useState<{
     open: boolean;

@@ -9,6 +9,7 @@ type ContextOptions = {
 /**
  * Create context for the tRPC API
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function createTRPCContext(_opts: ContextOptions) {
   return {
     databaseService: new DatabaseService(),

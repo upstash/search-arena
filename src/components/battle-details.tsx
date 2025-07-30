@@ -1,13 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -119,6 +112,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
 
   return (
     <div className="space-y-4">
+      {/* The old header, it takes too much space */}
       {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -208,7 +202,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
           transition={{ duration: 0.2, delay: 0.1 }}
           className="w-full md:w-64 flex-shrink-0 overflow-y-auto border rounded bg-white"
         >
-          {/* Hedaer */}
+          {/* Header */}
           <div className="p-3 border-b bg-gray-50">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium">Queries</h3>
@@ -449,4 +443,48 @@ export type SearchResult = {
   title: string;
   description: string;
   score: number;
+};
+
+export const BattleHeader = ({ battleId }: { battleId: string }) => {
+  const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
+
+  if (!battle) return;
+
+  return (
+    <motion.div
+      className="flex items-center gap-3"
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex items-center space-x-2">
+        <span className="text-sm font-medium">{battle.database1.label}</span>
+        <ProviderBadge provider={battle.database1.provider} />
+        {battle.meanScoreDb1 &&
+          battle.meanScoreDb2 &&
+          battle.meanScoreDb1 > battle.meanScoreDb2 && (
+            <Trophy className="h-3 w-3 text-yellow-500" />
+          )}
+      </div>
+      <div className="text-2xl font-bold text-blue-600">
+        {battle.meanScoreDb1}
+      </div>
+      <div className="text-2xl font-bold text-gray-600">vs</div>
+      <div className="text-2xl font-bold text-green-600">
+        {battle.meanScoreDb2}
+      </div>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm font-medium">{battle.database2.label}</span>
+        <ProviderBadge provider={battle.database2.provider} />
+        {battle.meanScoreDb2 &&
+          battle.meanScoreDb1 &&
+          battle.meanScoreDb2 > battle.meanScoreDb1 && (
+            <Trophy className="h-3 w-3 text-yellow-500" />
+          )}
+        {battle.meanScoreDb1 === battle.meanScoreDb2 && (
+          <Trophy className="h-3 w-3 text-gray-400" />
+        )}
+      </div>
+    </motion.div>
+  );
 };

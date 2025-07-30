@@ -1,6 +1,5 @@
 import { db, schema } from "../db";
 import { createSearchProvider } from "../providers";
-import { BattleResult } from "../trpc";
 import { LLMService } from "./llm";
 import { eq, or } from "drizzle-orm";
 
