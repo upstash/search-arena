@@ -24,17 +24,19 @@ import {
   Clock,
   Edit,
   Loader2,
+  Plus,
   RefreshCw,
   Trash2,
   Trophy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { trpc } from "@/api/trpc/client";
 import { BattleResult } from "@/api/trpc";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
 import Link from "next/link";
+import { BattleSetupModal } from "./battle-setup-modal";
 
 const emptyArray: BattleResult[] = [];
 
@@ -256,13 +258,7 @@ const useBattleTable = ({
   return table;
 };
 
-export default function BattleResultsDataTable({
-  handleEditBattle,
-  handleDeleteBattle,
-}: {
-  handleEditBattle: (id: string) => void;
-  handleDeleteBattle: (id: string) => void;
-}) {
+export default function BattleResultsDataTable() {
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
   const { data: battleResults } = trpc.battle.getAll.useQuery(undefined, {
@@ -277,6 +273,60 @@ export default function BattleResultsDataTable({
     );
   }, [battleResults]);
 
+  const [editBattleData, setEditBattleData] = useState<{
+    open: boolean;
+    data: {
+      label: string;
+      databaseId1: string;
+      databaseId2: string;
+      queries: string;
+    } | null;
+  }>({
+    open: false,
+    data: null,
+  });
+
+  const deleteBattleMutation = trpc.battle.delete.useMutation({
+    onSuccess: () => {
+      utils.battle.getAll.invalidate();
+    },
+    onError: (error) => {
+      console.error("Failed to delete battle:", error.message);
+    },
+  });
+
+  const handleEditBattle = useCallback(
+    (id: string) => {
+      const battle = battleResults?.find((b) => b.id === id);
+      if (battle) {
+        setEditBattleData({
+          open: true,
+          data: {
+            label: battle.label,
+            databaseId1: battle.databaseId1,
+            databaseId2: battle.databaseId2,
+            queries: battle.queries,
+          },
+        });
+      }
+    },
+    [battleResults]
+  );
+
+  const handleNewBattle = useCallback(() => {
+    setEditBattleData({
+      open: true,
+      data: null,
+    });
+  }, []);
+
+  const handleDeleteBattle = useCallback(
+    (id: string) => {
+      deleteBattleMutation.mutate({ battleId: id });
+    },
+    [deleteBattleMutation]
+  );
+
   const table = useBattleTable({
     handleEditBattle,
     handleDeleteBattle,
@@ -284,6 +334,14 @@ export default function BattleResultsDataTable({
 
   return (
     <div className="w-full">
+      {/* Edit Battle Modal */}
+      {editBattleData.open && (
+        <BattleSetupModal
+          open={editBattleData.open}
+          onClose={() => setEditBattleData({ open: false, data: null })}
+          initialData={editBattleData.data || undefined}
+        />
+      )}
       <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Filter battles..."
@@ -295,6 +353,9 @@ export default function BattleResultsDataTable({
         />
 
         <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={handleNewBattle}>
+            <Plus /> New Battle
+          </Button>
           <Button
             variant="outline"
             onClick={() => {
