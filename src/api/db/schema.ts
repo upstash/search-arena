@@ -17,6 +17,13 @@ export const providerEnum = pgEnum("provider_type", [
   "upstash_search",
 ]);
 
+export const battleStatusEnum = pgEnum("battle_status", [
+  "pending",
+  "in_progress",
+  "completed",
+  "failed",
+]);
+
 // Database table
 export const databases = pgTable("databases", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -41,7 +48,9 @@ export const battles = pgTable("battles", {
   queries: text("queries").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
-  status: varchar("status", { length: 50 }).default("pending").notNull(),
+  status: battleStatusEnum("status").default("pending").notNull(),
+  // Error message if status is "failed"
+  error: text("error"),
   meanScoreDb1: decimal("mean_score_db1", { precision: 4, scale: 2 }),
   meanScoreDb2: decimal("mean_score_db2", { precision: 4, scale: 2 }),
 });

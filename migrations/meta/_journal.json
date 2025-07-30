@@ -36,6 +36,20 @@
       "when": 1752941452818,
       "tag": "0004_bouncy_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1753779821908,
+      "tag": "0005_glossy_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753853325366,
+      "tag": "0006_graceful_nightmare",
+      "breakpoints": true
     }
   ]
 }
