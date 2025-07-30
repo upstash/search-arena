@@ -3,13 +3,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Loader2 } from "lucide-react";
 import { trpc } from "@/api/trpc/client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { motion } from "motion/react";
-import { BattleResultsDataTable } from "./battle-results-data-table";
+import BattleResultsDataTable from "./battle-results-data-table";
 
 export function BattleResults() {
   const { data: battleResults } = trpc.battle.getAll.useQuery();
+  const utils = trpc.useUtils();
   const [editBattleData, setEditBattleData] = useState<{
     open: boolean;
     data: {
@@ -22,6 +23,40 @@ export function BattleResults() {
     open: false,
     data: null,
   });
+
+  const deleteBattleMutation = trpc.battle.delete.useMutation({
+    onSuccess: () => {
+      utils.battle.getAll.invalidate();
+    },
+    onError: (error) => {
+      console.error("Failed to delete battle:", error.message);
+    },
+  });
+
+  const handleEditBattle = useCallback(
+    (id: string) => {
+      const battle = battleResults?.find((b) => b.id === id);
+      if (battle) {
+        setEditBattleData({
+          open: true,
+          data: {
+            label: battle.label,
+            databaseId1: battle.databaseId1,
+            databaseId2: battle.databaseId2,
+            queries: battle.queries,
+          },
+        });
+      }
+    },
+    [battleResults]
+  );
+
+  const handleDeleteBattle = useCallback(
+    (id: string) => {
+      deleteBattleMutation.mutate({ battleId: id });
+    },
+    [deleteBattleMutation]
+  );
 
   // Determine if we should show a global refetch notification
   const inProgressCount =
@@ -89,7 +124,16 @@ export function BattleResults() {
           </CardContent>
         </Card>
       ) : (
-        <BattleResultsDataTable />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <BattleResultsDataTable
+            handleEditBattle={handleEditBattle}
+            handleDeleteBattle={handleDeleteBattle}
+          />
+        </motion.div>
       )}
     </div>
   );

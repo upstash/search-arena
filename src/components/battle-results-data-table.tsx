@@ -24,16 +24,14 @@ import {
   Clock,
   Edit,
   Loader2,
-  Plus,
   RefreshCw,
+  Trash2,
   Trophy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { BattleSetupModal } from "./battle-setup-modal";
+import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/api/trpc/client";
 import { BattleResult } from "@/api/trpc";
-import { motion } from "motion/react";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
 import Link from "next/link";
@@ -42,8 +40,10 @@ const emptyArray: BattleResult[] = [];
 
 const useBattleTable = ({
   handleEditBattle,
+  handleDeleteBattle,
 }: {
   handleEditBattle: (id: string) => void;
+  handleDeleteBattle: (id: string) => void;
 }) => {
   const { data: battleResults = emptyArray } = trpc.battle.getAll.useQuery();
 
@@ -65,13 +65,13 @@ const useBattleTable = ({
                 return {
                   variant: "secondary" as const,
                   icon: <Loader2 className="h-3 w-3 animate-spin" />,
-                  text: "In Progress",
+                  text: "Battle running",
                 };
               case "pending":
                 return {
                   variant: "outline" as const,
-                  icon: <Loader2 className="h-3 w-3 animate-spin" />,
-                  text: "Battle running",
+                  icon: <Clock className="h-3 w-3" />,
+                  text: "Pending",
                 };
               case "failed":
                 return {
@@ -173,17 +173,7 @@ const useBattleTable = ({
                   {battle.meanScoreDb1}
                 </span>
                 {score1 > score2 && (
-                  <motion.div
-                    initial={{ rotate: 30, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 20,
-                    }}
-                  >
-                    <Trophy className="h-3 w-3 text-yellow-500" />
-                  </motion.div>
+                  <Trophy className="h-3 w-3 text-yellow-500" />
                 )}
               </div>
               <span className="text-xs text-gray-400">vs</span>
@@ -192,26 +182,10 @@ const useBattleTable = ({
                   {battle.meanScoreDb2}
                 </span>
                 {score2 > score1 && (
-                  <motion.div
-                    initial={{ rotate: 30, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 20,
-                    }}
-                  >
-                    <Trophy className="h-3 w-3 text-yellow-500" />
-                  </motion.div>
+                  <Trophy className="h-3 w-3 text-yellow-500" />
                 )}
                 {score1 === score2 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <Trophy className="h-3 w-3 text-gray-400" />
-                  </motion.div>
+                  <Trophy className="h-3 w-3 text-gray-400" />
                 )}
               </div>
             </div>
@@ -247,15 +221,25 @@ const useBattleTable = ({
                   <Edit className="mr-2 h-4 w-4" />
                 </Button>
               </SimpleTooltip>
+              <SimpleTooltip content="Delete Battle">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleDeleteBattle(battle.id)}
+                  className="hover:text-red-700 transition-colors"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                </Button>
+              </SimpleTooltip>
             </div>
           );
         },
       },
     ],
-    [handleEditBattle]
+    [handleEditBattle, handleDeleteBattle]
   );
 
   const table = useReactTable<BattleResult>({
+    getRowId: (row) => row.id,
     data: battleResults,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -272,7 +256,13 @@ const useBattleTable = ({
   return table;
 };
 
-export function BattleResultsDataTable() {
+export default function BattleResultsDataTable({
+  handleEditBattle,
+  handleDeleteBattle,
+}: {
+  handleEditBattle: (id: string) => void;
+  handleDeleteBattle: (id: string) => void;
+}) {
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
   const { data: battleResults } = trpc.battle.getAll.useQuery(undefined, {
@@ -287,32 +277,13 @@ export function BattleResultsDataTable() {
     );
   }, [battleResults]);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingBattleId, setEditingBattleId] = useState<string | undefined>(
-    undefined
-  );
-
-  const handleEditBattle = useCallback((id: string) => {
-    setEditingBattleId(id);
-    setModalOpen(true);
-  }, []);
-
   const table = useBattleTable({
     handleEditBattle,
+    handleDeleteBattle,
   });
 
   return (
     <div className="w-full">
-      <BattleSetupModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        initialData={
-          editingBattleId
-            ? battleResults?.find((d) => d.id === editingBattleId)
-            : undefined
-        }
-      />
-
       <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Filter battles..."
@@ -324,15 +295,6 @@ export function BattleResultsDataTable() {
         />
 
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setModalOpen(true);
-              setEditingBattleId(undefined);
-            }}
-          >
-            <Plus /> New Battle
-          </Button>
           <Button
             variant="outline"
             onClick={() => {

@@ -59,6 +59,13 @@ export const battleRouter = router({
       return { success };
     }),
 
+  // Delete a battle
+  delete: publicProcedure
+    .input(z.object({ battleId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.battleService.deleteBattle(input.battleId);
+    }),
+
   // Get battle query results
   getQueryResults: publicProcedure
     .input(z.object({ battleId: z.uuid() }))

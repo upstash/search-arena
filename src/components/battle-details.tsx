@@ -341,7 +341,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
                 className="text-sm font-medium flex justify-between grow"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.3 }}
               >
                 Results: &quot;{selectedQuery.queryText}&quot;
                 {selectedQuery.results.at(0)?.llmDuration && (
@@ -358,7 +358,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
                 className="flex items-center space-x-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.3 }}
               >
                 <Checkbox
                   id="hide-descriptions"
@@ -381,7 +381,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
               className="grid grid-cols-1 lg:grid-cols-2 gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.4 }}
+              transition={{ delay: 0.4, duration: 0.2 }}
             >
               {sortedResults[selectedQueryIndex].results
                 .sort((a) => (a.databaseId === battle.databaseId1 ? -1 : 1))

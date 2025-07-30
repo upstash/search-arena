@@ -326,6 +326,28 @@ export class BattleService {
   }
 
   /**
+   * Delete a battle and all its related data
+   */
+  async deleteBattle(battleId: string) {
+    // Check if battle exists
+    const battle = await db.query.battles.findFirst({
+      where: eq(schema.battles.id, battleId),
+    });
+
+    if (!battle) {
+      throw new Error(`Battle ${battleId} not found`);
+    }
+
+    // Delete the battle (cascade will handle related data)
+    await db
+      .delete(schema.battles)
+      .where(eq(schema.battles.id, battleId))
+      .execute();
+
+    return { success: true };
+  }
+
+  /**
    * Get battle query results
    */
   async getBattleQueryResults(battleId: string) {
