@@ -31,11 +31,11 @@ import { Badge } from "@/components/ui/badge";
 import { useCallback, useMemo, useState } from "react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { trpc } from "@/api/trpc/client";
-import { BattleResult, router } from "@/api/trpc";
+import { BattleResult } from "@/api/trpc";
 import { motion } from "motion/react";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const emptyArray: BattleResult[] = [];
 
@@ -275,7 +275,6 @@ export function BattleResultsDataTable() {
   const [editingBattleId, setEditingBattleId] = useState<string | undefined>(
     undefined
   );
-  const router = useRouter();
 
   const handleEditBattle = useCallback((id: string) => {
     setEditingBattleId(id);
@@ -310,7 +309,7 @@ export function BattleResultsDataTable() {
 
         <Button
           variant="outline"
-          onClick={(e) => {
+          onClick={() => {
             setModalOpen(true);
             setEditingBattleId(undefined);
           }}
@@ -342,20 +341,28 @@ export function BattleResultsDataTable() {
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
-                  className="cursor-pointer hover:bg-gray-100"
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={(e) => {
-                    if (e.target instanceof HTMLButtonElement) return;
-                    router.push(`/battle/${row.original.id}`);
-                  }}
+                  className="hover:bg-gray-100"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <TableCell key={cell.id} className="p-0">
+                      <Link
+                        href={`/battle/${row.original.id}`}
+                        className="block p-4 cursor-pointer"
+                        onClick={(e) => {
+                          // Prevent navigation if clicking on buttons or interactive elements
+                          if ((e.target as HTMLElement).closest("button")) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Link>
                     </TableCell>
                   ))}
                 </TableRow>
