@@ -14,6 +14,7 @@ import { Trophy, ArrowUpDown } from "lucide-react";
 import { trpc } from "@/api/trpc/client";
 import { motion, AnimatePresence } from "motion/react";
 import { ProviderBadge } from "./provider-badge";
+import { PROVIDERS } from "@/lib/providers";
 
 interface BattleDetailsProps {
   battleId: string;
@@ -335,14 +336,23 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
           transition={{ duration: 0.2, delay: 0.2 }}
         >
           <div className="p-3 border-b bg-gray-50">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <motion.h2
-                className="text-sm font-medium"
+                className="text-sm font-medium flex justify-between grow"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
                 Results: &quot;{selectedQuery.queryText}&quot;
+                {selectedQuery.results.at(0)?.llmDuration && (
+                  <Badge className="bg-purple-100 text-purple-800 text-xs">
+                    LLM:{" "}
+                    {(
+                      Number(selectedQuery.results.at(0)?.llmDuration) / 1000
+                    ).toFixed(1)}
+                    s
+                  </Badge>
+                )}
               </motion.h2>
               <motion.div
                 className="flex items-center space-x-2"
@@ -383,9 +393,24 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
                           ? battle.database1.label
                           : battle.database2.label}
                       </h3>
-                      <Badge className="bg-blue-100 text-blue-800 text-xs">
-                        Score: {result.score}
-                      </Badge>
+                      <div className="flex gap-1">
+                        <Badge
+                          className="text-xs"
+                          style={{
+                            backgroundColor:
+                              PROVIDERS[result.database.provider].color["100"],
+                            color:
+                              PROVIDERS[result.database.provider].color["800"],
+                          }}
+                        >
+                          Score: {result.score}
+                        </Badge>
+                        {result.searchDuration && (
+                          <Badge className="bg-amber-100 text-amber-800 text-xs">
+                            Search: {Number(result.searchDuration).toFixed(0)}ms
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-gray-500 my-2 h-[100px] overflow-scroll">
                       {result.llmFeedback}

@@ -33,6 +33,7 @@ export class LLMService {
   ): Promise<{
     db1: EvaluationResult;
     db2: EvaluationResult;
+    llmDuration: number;
   }> {
     if (!this.genAI) {
       throw new Error("Google API key is required for LLM evaluation");
@@ -79,10 +80,13 @@ Provide your evaluation in the following JSON format only:
   }
 }`.trim();
 
-    // Generate content with the model
+    // Generate content with the model and measure timing
+    const llmStart = performance.now();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    const llmEnd = performance.now();
+    const llmDuration = llmEnd - llmStart;
 
     // Parse the JSON response
     const jsonMatch = text.match(/\{[\s\S]*\}/); // Extract JSON object from text
@@ -114,6 +118,7 @@ Provide your evaluation in the following JSON format only:
             ? "LLM response parsing failed: " + jsonMatch[0]
             : jsonResponse.db2.feedback,
         },
+        llmDuration,
       };
     } catch (parseError) {
       console.error("Failed to parse LLM response:", parseError);

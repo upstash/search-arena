@@ -79,6 +79,9 @@ export const searchResults = pgTable(
     results: jsonb("results").notNull(),
     score: decimal("score", { precision: 4, scale: 2 }),
     llmFeedback: text("llm_feedback"),
+    // Timing information in milliseconds
+    searchDuration: decimal("search_duration", { precision: 8, scale: 2 }),
+    llmDuration: decimal("llm_duration", { precision: 8, scale: 2 }),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => {

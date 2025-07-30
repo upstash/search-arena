@@ -112,31 +112,49 @@ export class BattleService {
       let totalScoreDb2 = 0;
 
       const searchQuery = async (query: schema.BattleQuery) => {
-        const [results1, results2] = await Promise.all([
-          provider1.search(query.queryText),
-          provider2.search(query.queryText),
+        // Helper function to search with timing
+        const searchWithTiming = async (
+          provider: typeof provider1,
+          queryText: string
+        ) => {
+          const start = performance.now();
+          const results = await provider.search(queryText);
+          const end = performance.now();
+          return {
+            results,
+            duration: end - start,
+          };
+        };
+
+        // Run searches in parallel with individual timing
+        const [search1, search2] = await Promise.all([
+          searchWithTiming(provider1, query.queryText),
+          searchWithTiming(provider2, query.queryText),
         ]);
 
-        console.log("> " + provider1.name, results1.at(0));
-        console.log("> " + provider2.name, results2.at(0));
+        console.log("> " + provider1.name, search1.results.at(0));
+        console.log("> " + provider2.name, search2.results.at(0));
 
-        // Evaluate results
+        // Evaluate results with LLM (timing is handled inside the LLM service)
         console.log(`Evaluating results for query:`, query.queryText);
-        const { db1, db2 } = await this.llmService.evaluateSearchResults(
-          query.queryText,
-          results1,
-          results2
-        );
+        const { db1, db2, llmDuration } =
+          await this.llmService.evaluateSearchResults(
+            query.queryText,
+            search1.results,
+            search2.results
+          );
 
-        // Store results
+        // Store results with timing information
         await db
           .insert(schema.searchResults)
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId1,
-            results: results1,
+            results: search1.results,
             score: String(db1.score), // Convert to string for Drizzle compatibility
             llmFeedback: db1.feedback,
+            searchDuration: String(search1.duration.toFixed(2)),
+            llmDuration: String(llmDuration.toFixed(2)),
           })
           .execute();
 
@@ -145,9 +163,11 @@ export class BattleService {
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId2,
-            results: results2,
+            results: search2.results,
             score: String(db2.score), // Convert to string for Drizzle compatibility
             llmFeedback: db2.feedback,
+            searchDuration: String(search2.duration.toFixed(2)),
+            llmDuration: String(llmDuration.toFixed(2)),
           })
           .execute();
 
