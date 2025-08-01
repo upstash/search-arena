@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { trpc } from "@/api/trpc/client";
-import { BattleResult } from "@/api/trpc";
 import { SortOptions, sortQueryResults } from "./query-list-sort-select";
 import { QueryDetails } from "./query-details";
 import { QueryList } from "./query-list";
@@ -35,15 +34,16 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     utils.battle.getQueryResults,
   ]);
 
+  if (!battle || battle?.queries.length === 0) return <div>Loading</div>;
+
   const sortedQueries = sortQueryResults({
-    queries: battle?.queries || [],
+    // @ts-expect-error BattleQuery type mismatch
+    queries: battle.queries,
     sortBy,
     battle,
   });
 
   const selectedQuery = sortedQueries[selectedQueryIndex];
-
-  if (!battle || sortedQueries.length === 0) return <div>Loading</div>;
 
   return (
     <div className="space-y-4">
@@ -59,10 +59,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
         />
 
         {/* Query Details Main Content */}
-        <QueryDetails
-          selectedQuery={selectedQuery}
-          battle={battle as BattleResult}
-        />
+        <QueryDetails selectedQuery={selectedQuery} battle={battle} />
       </div>
     </div>
   );
