@@ -71,6 +71,13 @@
       "when": 1754036225305,
       "tag": "0009_fresh_slayback",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1754055784283,
+      "tag": "0010_plain_nemesis",
+      "breakpoints": true
     }
   ]
 }

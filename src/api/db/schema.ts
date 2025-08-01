@@ -77,6 +77,7 @@ export const battleQueries = pgTable("battle_queries", {
     .references(() => battles.id, { onDelete: "cascade" }),
   queryText: text("query_text").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  error: text("error"),
 });
 
 // Search results table

@@ -177,7 +177,22 @@ export class BattleService {
         totalScoreDb2 += db2.score;
       };
 
-      await Promise.all(queries.map(searchQuery));
+      await Promise.all(
+        queries.map(async (query) => {
+          try {
+            return await searchQuery(query);
+          } catch (error) {
+            // Update the query with error
+            await db
+              .update(schema.battleQueries)
+              .set({
+                error: String(error),
+              })
+              .where(eq(schema.battleQueries.id, query.id))
+              .execute();
+          }
+        })
+      );
 
       // Calculate mean scores
       const meanScoreDb1 =

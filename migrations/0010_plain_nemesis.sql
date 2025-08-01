@@ -1,0 +1,1 @@
+ALTER TABLE "battle_queries" ADD COLUMN "error" text;

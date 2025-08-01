@@ -110,7 +110,7 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
 
   const selectedQuery = sortedResults[selectedQueryIndex];
 
-  if (!battle) return <div>Loading</div>;
+  if (!battle || sortedResults.length === 0) return <div>Loading</div>;
 
   return (
     <div className="space-y-4">
@@ -263,67 +263,73 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
                 <div className="text-xs font-medium truncate mb-1">
                   {queryResult.queryText}
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex space-x-2">
-                    <span className="text-blue-600 font-mono">
-                      {
-                        queryResult.results.find(
-                          (r) => r.databaseId === battle?.databaseId1
-                        )?.score
-                      }
-                    </span>
-                    <span className="text-gray-400">vs</span>
-                    <span className="text-green-600 font-mono">
-                      {
-                        queryResult.results.find(
-                          (r) => r.databaseId === battle?.databaseId2
-                        )?.score
-                      }
-                    </span>
+                {queryResult.error ? (
+                  <div className="text-red-500 text-xs truncate whitespace-normal max-h-[50px]">
+                    {queryResult.error}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-gray-500 font-mono">
-                      Δ
-                      {Math.abs(
-                        Number(
+                ) : (
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex space-x-2">
+                      <span className="text-blue-600 font-mono">
+                        {
                           queryResult.results.find(
                             (r) => r.databaseId === battle?.databaseId1
                           )?.score
-                        ) -
+                        }
+                      </span>
+                      <span className="text-gray-400">vs</span>
+                      <span className="text-green-600 font-mono">
+                        {
+                          queryResult.results.find(
+                            (r) => r.databaseId === battle?.databaseId2
+                          )?.score
+                        }
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-gray-500 font-mono">
+                        Δ
+                        {Math.abs(
                           Number(
                             queryResult.results.find(
-                              (r) => r.databaseId === battle?.databaseId2
+                              (r) => r.databaseId === battle?.databaseId1
                             )?.score
-                          )
-                      ).toFixed(1)}
-                    </span>
-                    {Number(
-                      queryResult.results.find(
-                        (r) => r.databaseId === battle?.databaseId1
-                      )?.score
-                    ) >
-                    Number(
-                      queryResult.results.find(
-                        (r) => r.databaseId === battle?.databaseId2
-                      )?.score
-                    ) ? (
-                      <Trophy className="h-3 w-3 text-blue-500" />
-                    ) : Number(
+                          ) -
+                            Number(
+                              queryResult.results.find(
+                                (r) => r.databaseId === battle?.databaseId2
+                              )?.score
+                            )
+                        ).toFixed(1)}
+                      </span>
+                      {Number(
                         queryResult.results.find(
-                          (r) => r.databaseId === battle?.databaseId2
+                          (r) => r.databaseId === battle?.databaseId1
                         )?.score
                       ) >
                       Number(
                         queryResult.results.find(
-                          (r) => r.databaseId === battle?.databaseId1
+                          (r) => r.databaseId === battle?.databaseId2
                         )?.score
                       ) ? (
-                      <Trophy className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Trophy className="h-3 w-3 text-gray-400" />
-                    )}
+                        <Trophy className="h-3 w-3 text-blue-500" />
+                      ) : Number(
+                          queryResult.results.find(
+                            (r) => r.databaseId === battle?.databaseId2
+                          )?.score
+                        ) >
+                        Number(
+                          queryResult.results.find(
+                            (r) => r.databaseId === battle?.databaseId1
+                          )?.score
+                        ) ? (
+                        <Trophy className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <Trophy className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -376,6 +382,25 @@ export function BattleDetails({ battleId }: BattleDetailsProps) {
               </motion.div>
             </div>
           </div>
+
+          {selectedQuery.error && (
+            <div className="p-3">
+              <motion.div
+                className="bg-red-50 border border-red-200 rounded p-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  {selectedQuery.error}
+                </motion.p>
+              </motion.div>
+            </div>
+          )}
 
           <div className="p-3">
             <motion.div
