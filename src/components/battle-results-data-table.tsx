@@ -155,6 +155,17 @@ const useBattleTable = ({
         },
       },
       {
+        header: "Query Count",
+        cell: ({ row }) => {
+          const battle = row.original;
+          return (
+            <span className="text-sm text-gray-700">
+              {battle.queries.split("\n").length}
+            </span>
+          );
+        },
+      },
+      {
         accessorKey: "results",
         header: "Results",
         cell: ({ row }) => {
