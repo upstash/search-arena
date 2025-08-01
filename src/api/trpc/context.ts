@@ -1,19 +1,18 @@
 import { BattleService, DatabaseService } from "../services";
-
-// Define a more flexible context type for both App Router and Pages Router
-type ContextOptions = {
-  req: Request | { headers: Headers } | undefined;
-  res?: Response | undefined;
-};
+import { getOrCreateSessionId } from "../../lib/session-middleware";
+import { isDev } from "@/lib/dev";
 
 /**
  * Create context for the tRPC API
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function createTRPCContext(_opts: ContextOptions) {
+export async function createTRPCContext() {
+  const sessionId = await getOrCreateSessionId();
+
   return {
     databaseService: new DatabaseService(),
     battleService: new BattleService(),
+    sessionId,
+    isAdmin: isDev,
   };
 }
 

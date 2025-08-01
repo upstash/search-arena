@@ -1,15 +1,17 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
+  text,
+  timestamp,
   uuid,
   varchar,
-  timestamp,
-  text,
-  pgEnum,
   decimal,
+  pgEnum,
+  index,
   jsonb,
   unique,
+  boolean,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 
 // Provider types enum
 export const providerEnum = pgEnum("provider_type", [
@@ -36,24 +38,36 @@ export const databases = pgTable("databases", {
 });
 
 // Battle table
-export const battles = pgTable("battles", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  label: varchar("label", { length: 255 }).notNull(),
-  databaseId1: uuid("database_id_1")
-    .notNull()
-    .references(() => databases.id, { onDelete: "cascade" }),
-  databaseId2: uuid("database_id_2")
-    .notNull()
-    .references(() => databases.id, { onDelete: "cascade" }),
-  queries: text("queries").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
-  status: battleStatusEnum("status").default("pending").notNull(),
-  // Error message if status is "failed"
-  error: text("error"),
-  meanScoreDb1: decimal("mean_score_db1", { precision: 4, scale: 2 }),
-  meanScoreDb2: decimal("mean_score_db2", { precision: 4, scale: 2 }),
-});
+export const battles = pgTable(
+  "battles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    label: varchar("label", { length: 255 }).notNull(),
+    databaseId1: uuid("database_id_1")
+      .notNull()
+      .references(() => databases.id, { onDelete: "cascade" }),
+    databaseId2: uuid("database_id_2")
+      .notNull()
+      .references(() => databases.id, { onDelete: "cascade" }),
+    queries: text("queries").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    completedAt: timestamp("completed_at"),
+    status: battleStatusEnum("status").default("pending").notNull(),
+    // Error message if status is "failed"
+    error: text("error"),
+    meanScoreDb1: decimal("mean_score_db1", { precision: 4, scale: 2 }),
+    meanScoreDb2: decimal("mean_score_db2", { precision: 4, scale: 2 }),
+    // Session ID to track user's battles
+    sessionId: varchar("session_id", { length: 255 }),
+    isDemo: boolean("is_demo").default(false),
+  },
+  (table) => {
+    return [
+      index("session_id_idx").on(table.sessionId),
+      index("is_demo_idx").on(table.isDemo),
+    ];
+  }
+);
 
 // Battle queries table
 export const battleQueries = pgTable("battle_queries", {

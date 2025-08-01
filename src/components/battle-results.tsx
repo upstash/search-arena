@@ -1,13 +1,19 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Loader2 } from "lucide-react";
+import { Trophy, Loader2, Plus } from "lucide-react";
 import { trpc } from "@/api/trpc/client";
 import { motion } from "motion/react";
 import BattleResultsDataTable from "./battle-results-data-table";
+import { BattleSetupModal } from "./battle-setup-modal";
+import { useState } from "react";
+import { Button } from "./ui/button";
 
-export function BattleResults() {
-  const { data: battleResults } = trpc.battle.getAll.useQuery();
+export function BattleResults({ isDemo }: { isDemo: boolean }) {
+  const [battleModalOpen, setBattleModalOpen] = useState(false);
+  const { data: battleResults } = trpc.battle.getAll.useQuery({
+    isDemo,
+  });
 
   const inProgressCount =
     battleResults?.filter(
@@ -16,6 +22,11 @@ export function BattleResults() {
 
   return (
     <div className="space-y-4">
+      <BattleSetupModal
+        open={battleModalOpen}
+        onClose={() => setBattleModalOpen(false)}
+      />
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -23,10 +34,16 @@ export function BattleResults() {
         className="flex justify-between items-start"
       >
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Battle Results</h2>
-          <p className="text-sm text-gray-600">Database comparison history</p>
+          <h2 className="text-xl font-bold text-gray-900">
+            {isDemo ? "Example Results" : "Battle Results"}
+          </h2>
+          <p className="text-sm text-gray-600">
+            {isDemo
+              ? "Example query results made by our team"
+              : "Database comparison history"}
+          </p>
         </div>
-        {inProgressCount > 0 && (
+        {!isDemo && inProgressCount > 0 && (
           <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-md">
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             <span>
@@ -63,6 +80,14 @@ export function BattleResults() {
             >
               Start your first database comparison battle
             </motion.p>
+            <Button
+              onClick={() => setBattleModalOpen(true)}
+              className="mt-4"
+              variant={"outline"}
+            >
+              <Plus />
+              New Battle
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -71,7 +96,7 @@ export function BattleResults() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <BattleResultsDataTable />
+          <BattleResultsDataTable isDemo={isDemo} />
         </motion.div>
       )}
     </div>

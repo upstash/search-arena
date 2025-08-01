@@ -1,7 +1,7 @@
 import { db, schema } from "../db";
 import { createSearchProvider } from "../providers";
 import { LLMService } from "./llm";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 
 export class BattleService {
   private llmService: LLMService;
@@ -17,7 +17,8 @@ export class BattleService {
     label: string,
     databaseId1: string,
     databaseId2: string,
-    queries: string
+    queries: string,
+    sessionId?: string
   ) {
     // Create the battle record
     const [battle] = await db
@@ -28,6 +29,7 @@ export class BattleService {
         databaseId2,
         status: "pending",
         queries,
+        sessionId,
       })
       .returning();
 
@@ -243,10 +245,28 @@ export class BattleService {
   }
 
   /**
-   * Get all battles
+   * Get all battles for a specific session
    */
-  async getAllBattles() {
+  async getAllBattles({
+    sessionId,
+    isDemo,
+  }: {
+    sessionId?: string;
+    isDemo?: boolean;
+  }) {
+    const sessionFilter = sessionId
+      ? eq(schema.battles.sessionId, sessionId)
+      : undefined;
+    const demoFilter =
+      isDemo !== undefined ? eq(schema.battles.isDemo, isDemo) : undefined;
+
+    // For demo, don't care about the sessionId
+    const combinedFilters = isDemo
+      ? demoFilter
+      : and(sessionFilter, demoFilter);
+
     return await db.query.battles.findMany({
+      where: combinedFilters,
       orderBy: (battles, { desc }) => [desc(battles.createdAt)],
       with: {
         database1: true,
@@ -258,8 +278,8 @@ export class BattleService {
   /**
    * Get battle details by ID
    */
-  async getBattleById(battleId: string) {
-    return await db.query.battles.findFirst({
+  async getBattleById(battleId: string, sessionId?: string) {
+    const battle = await db.query.battles.findFirst({
       where: eq(schema.battles.id, battleId),
       with: {
         database1: true,
@@ -275,6 +295,17 @@ export class BattleService {
         },
       },
     });
+
+    // If battle not found, return null
+    if (!battle) throw new Error(`Battle ${battleId} not found`);
+
+    // If sessionId is provided and battle has a sessionId, verify they match
+    // Only return the battle if it belongs to the current session or has no session ID
+    if (sessionId && battle.sessionId && battle.sessionId !== sessionId) {
+      throw new Error(`Battle ${battleId} not found`);
+    }
+
+    return battle;
   }
 
   /**
@@ -289,9 +320,7 @@ export class BattleService {
       },
     });
 
-    if (!battle) {
-      throw new Error(`Battle ${battleId} not found`);
-    }
+    if (!battle) throw new Error(`Battle ${battleId} not found`);
 
     if (battle.status === "in_progress") {
       throw new Error(`Battle ${battleId} is already in progress`);
@@ -327,14 +356,21 @@ export class BattleService {
 
   /**
    * Delete a battle and all its related data
+   * @param battleId ID of the battle to delete
+   * @param sessionId Optional session ID to verify ownership
    */
-  async deleteBattle(battleId: string) {
+  async deleteBattle(battleId: string, sessionId?: string) {
     // Check if battle exists
     const battle = await db.query.battles.findFirst({
       where: eq(schema.battles.id, battleId),
     });
 
     if (!battle) {
+      throw new Error(`Battle ${battleId} not found`);
+    }
+
+    // If sessionId is provided, verify that it matches the battle's sessionId
+    if (sessionId && battle.sessionId && battle.sessionId !== sessionId) {
       throw new Error(`Battle ${battleId} not found`);
     }
 
@@ -348,15 +384,40 @@ export class BattleService {
   }
 
   /**
+   * Sets the battle isDemo flag
+   *
+   * @param battleId ID of the battle to edit
+   * @param isDemo New value for the isDemo flag
+   */
+  async editBattle({
+    battleId,
+    isDemo,
+  }: {
+    battleId: string;
+    isDemo: boolean;
+  }) {
+    await db
+      .update(schema.battles)
+      .set({ isDemo })
+      .where(eq(schema.battles.id, battleId))
+      .execute();
+  }
+
+  /**
    * Get battle query results
    */
-  async getBattleQueryResults(battleId: string) {
+  async getBattleQueryResults(battleId: string, sessionId?: string) {
     // First get the battle to get database IDs
     const battle = await db.query.battles.findFirst({
       where: eq(schema.battles.id, battleId),
     });
 
     if (!battle) {
+      throw new Error(`Battle ${battleId} not found`);
+    }
+
+    // If sessionId is provided and battle has a sessionId, verify they match
+    if (sessionId && battle.sessionId && battle.sessionId !== sessionId) {
       throw new Error(`Battle ${battleId} not found`);
     }
 

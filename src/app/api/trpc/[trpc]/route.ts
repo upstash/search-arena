@@ -11,13 +11,12 @@ async function handler(req: Request) {
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    // For Next.js App Router, we need to adapt the context creation
-    createContext: () => createTRPCContext({ req }),
+    createContext: async () => await createTRPCContext(),
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
             console.error(
-              `❌ tRPC error on ${path ?? "<no-path>"}: ${error.message}`,
+              `❌ tRPC error on ${path ?? "<no-path>"}: ${error.message}`
             );
           }
         : undefined,

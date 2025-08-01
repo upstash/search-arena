@@ -15,6 +15,7 @@ import { trpc } from "@/api/trpc/client";
 import { motion, AnimatePresence } from "motion/react";
 import { ProviderBadge } from "./provider-badge";
 import { PROVIDERS } from "@/lib/providers";
+import { Label } from "@radix-ui/react-select";
 
 interface BattleDetailsProps {
   battleId: string;
@@ -470,6 +471,35 @@ export type SearchResult = {
   score: number;
 };
 
+export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
+  const utils = trpc.useUtils();
+  const { mutate, isPending } = trpc.battle.edit.useMutation({
+    onSuccess: () => {
+      utils.battle.getById.invalidate({ id: battleId });
+      utils.battle.getAll.invalidate();
+    },
+  });
+
+  const { data: battle, isLoading } = trpc.battle.getById.useQuery({
+    id: battleId,
+  });
+
+  return (
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id="demo"
+        className="cursor-pointer"
+        disabled={isLoading || isPending}
+        checked={battle?.isDemo ?? "indeterminate"}
+        onCheckedChange={(checked) =>
+          mutate({ battleId, isDemo: checked === true })
+        }
+      />
+      <label htmlFor="demo">Demo</label>
+    </div>
+  );
+};
+
 export const BattleHeader = ({ battleId }: { battleId: string }) => {
   const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
 
@@ -510,6 +540,8 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
           <Trophy className="h-3 w-3 text-gray-400" />
         )}
       </div>
+
+      <BattleDemoCheckbox battleId={battleId} />
     </motion.div>
   );
 };

@@ -8,8 +8,10 @@ import { DatabaseModal } from "./database-modal";
 import { trpc } from "@/api/trpc/client";
 import { motion, AnimatePresence } from "motion/react";
 import { ProviderBadge } from "./provider-badge";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export function DatabaseList() {
+  const { isAdmin } = useIsAdmin();
   const [showDatabaseModal, setShowDatabaseModal] = useState(false);
   const [editingDatabaseId, setEditingDatabaseId] = useState<
     string | undefined
@@ -96,32 +98,35 @@ export function DatabaseList() {
                       </h3>
                       <ProviderBadge provider={database.provider} />
                     </motion.div>
-                    <motion.div
-                      className="flex space-x-0.5 ml-1"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + index * 0.05 }}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => {
-                          setEditingDatabaseId(database.id);
-                          setShowDatabaseModal(true);
-                        }}
+                    {/* Database actions */}
+                    {isAdmin && (
+                      <motion.div
+                        className="flex space-x-0.5 ml-1"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 + index * 0.05 }}
                       >
-                        <Settings className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => deleteDatabase({ id: database.id })}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </motion.div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 cursor-pointer"
+                          onClick={() => {
+                            setEditingDatabaseId(database.id);
+                            setShowDatabaseModal(true);
+                          }}
+                        >
+                          <Settings className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 cursor-pointer"
+                          onClick={() => deleteDatabase({ id: database.id })}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </motion.div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

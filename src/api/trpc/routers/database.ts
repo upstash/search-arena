@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 
 // Input validation schemas
 const createDatabaseSchema = z.object({
@@ -19,19 +19,19 @@ const updateDatabaseSchema = z.object({
 // Database router
 export const databaseRouter = router({
   // Get all databases
-  getAll: publicProcedure.query(async ({ ctx }) => {
+  getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.databaseService.getAllDatabases();
   }),
 
   // Get database by ID
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       return ctx.databaseService.getDatabaseById(input.id);
     }),
 
   // Create a new database
-  create: publicProcedure
+  create: protectedProcedure
     .input(createDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.createDatabase(
@@ -42,7 +42,7 @@ export const databaseRouter = router({
     }),
 
   // Update a database
-  update: publicProcedure
+  update: protectedProcedure
     .input(updateDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.updateDatabase(input.id, {
@@ -52,14 +52,14 @@ export const databaseRouter = router({
     }),
 
   // Delete a database
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.deleteDatabase(input.id);
     }),
 
   // Test database connection
-  testConnection: publicProcedure
+  testConnection: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.testDatabaseConnection(input.id);

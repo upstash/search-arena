@@ -37,17 +37,23 @@ import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
 import Link from "next/link";
 import { BattleSetupModal } from "./battle-setup-modal";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const emptyArray: BattleResult[] = [];
 
 const useBattleTable = ({
   handleEditBattle,
   handleDeleteBattle,
+  isDemo,
 }: {
   handleEditBattle: (id: string) => void;
   handleDeleteBattle: (id: string) => void;
+  isDemo: boolean;
 }) => {
-  const { data: battleResults = emptyArray } = trpc.battle.getAll.useQuery();
+  const { isAdmin } = useIsAdmin();
+  const { data: battleResults = emptyArray } = trpc.battle.getAll.useQuery({
+    isDemo,
+  });
 
   const columns: ColumnDef<BattleResult>[] = useMemo(
     () => [
@@ -223,21 +229,23 @@ const useBattleTable = ({
                   <Edit className="mr-2 h-4 w-4" />
                 </Button>
               </SimpleTooltip>
-              <SimpleTooltip content="Delete Battle">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleDeleteBattle(battle.id)}
-                  className="hover:text-red-700 transition-colors"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                </Button>
-              </SimpleTooltip>
+              {(!isDemo || isAdmin) && (
+                <SimpleTooltip content="Delete Battle">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleDeleteBattle(battle.id)}
+                    className="hover:text-red-700 transition-colors"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  </Button>
+                </SimpleTooltip>
+              )}
             </div>
           );
         },
       },
     ],
-    [handleEditBattle, handleDeleteBattle]
+    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle]
   );
 
   const table = useReactTable<BattleResult>({
@@ -258,20 +266,31 @@ const useBattleTable = ({
   return table;
 };
 
-export default function BattleResultsDataTable() {
+export default function BattleResultsDataTable({
+  isDemo,
+}: {
+  isDemo: boolean;
+}) {
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
-  const { data: battleResults } = trpc.battle.getAll.useQuery(undefined, {
-    refetchInterval: shouldRefetch ? 4000 : undefined,
-  });
+  const { data: battleResults } = trpc.battle.getAll.useQuery(
+    {
+      isDemo,
+    },
+    {
+      refetchInterval: shouldRefetch ? 4000 : undefined,
+    }
+  );
   useEffect(() => {
+    if (isDemo) return;
+
     setShouldRefetch(
       battleResults?.some(
         (battle) =>
           battle.status === "in_progress" || battle.status === "pending"
       ) ?? false
     );
-  }, [battleResults]);
+  }, [battleResults, isDemo]);
 
   const [editBattleData, setEditBattleData] = useState<{
     open: boolean;
@@ -330,46 +349,46 @@ export default function BattleResultsDataTable() {
   const table = useBattleTable({
     handleEditBattle,
     handleDeleteBattle,
+    isDemo,
   });
 
   return (
     <div className="w-full">
-      {/* Edit Battle Modal */}
-      {editBattleData.open && (
-        <BattleSetupModal
-          open={editBattleData.open}
-          onClose={() => setEditBattleData({ open: false, data: null })}
-          initialData={editBattleData.data || undefined}
-        />
-      )}
-      <div className="flex items-center justify-between py-4">
-        <Input
-          placeholder="Filter battles..."
-          value={(table.getColumn("label")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("label")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+      <BattleSetupModal
+        open={editBattleData.open}
+        onClose={() => setEditBattleData({ open: false, data: null })}
+        initialData={editBattleData.data || undefined}
+      />
+      {!isDemo && (
+        <div className="flex items-center justify-between py-4">
+          <Input
+            placeholder="Filter battles..."
+            value={(table.getColumn("label")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("label")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleNewBattle}>
-            <Plus /> New Battle
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              utils.battle.getAll.invalidate();
-            }}
-          >
-            {trpc.battle.getAll.useQuery().isFetching ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <RefreshCw />
-            )}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={handleNewBattle}>
+              <Plus /> New Battle
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                utils.battle.getAll.invalidate();
+              }}
+            >
+              {trpc.battle.getAll.useQuery({ isDemo }).isFetching ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <RefreshCw />
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

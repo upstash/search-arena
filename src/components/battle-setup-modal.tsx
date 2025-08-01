@@ -47,6 +47,7 @@ export function BattleSetupModal({
   initialData,
 }: BattleSetupModalProps) {
   const {
+    watch,
     register,
     handleSubmit,
     reset,
@@ -83,17 +84,14 @@ export function BattleSetupModal({
     });
     if (!open) return;
 
-    if (memoizedInitialData) {
-      reset();
-    } else if (
-      databases &&
-      (databases.length === 2 || databases.length === 1)
+    if (
+      !memoizedInitialData.databaseId1 &&
+      !memoizedInitialData.databaseId2 &&
+      databases?.length === 2
     ) {
       reset({
-        label: "",
-        databaseId1: databases.at(0)?.id,
-        databaseId2: databases.at(1)?.id,
-        queries: "",
+        databaseId1: databases?.at(0)?.id,
+        databaseId2: databases?.at(1)?.id,
       });
     } else {
       reset();
@@ -137,7 +135,7 @@ export function BattleSetupModal({
             <Input
               id="label"
               {...register("label", { required: "Label is required" })}
-              placeholder="e.g., Product Search Test"
+              placeholder="e.g., Action Movies"
               aria-invalid={errors.label ? "true" : "false"}
             />
             {errors.label && (
@@ -163,7 +161,11 @@ export function BattleSetupModal({
                     </SelectTrigger>
                     <SelectContent>
                       {databases?.map((db) => (
-                        <SelectItem key={db.id} value={db.id}>
+                        <SelectItem
+                          key={db.id}
+                          value={db.id}
+                          disabled={db.id === watch("databaseId2")}
+                        >
                           {db.label}
                         </SelectItem>
                       ))}
@@ -192,7 +194,11 @@ export function BattleSetupModal({
                     </SelectTrigger>
                     <SelectContent>
                       {databases?.map((db) => (
-                        <SelectItem key={db.id} value={db.id}>
+                        <SelectItem
+                          key={db.id}
+                          value={db.id}
+                          disabled={db.id === watch("databaseId1")}
+                        >
                           {db.label}
                         </SelectItem>
                       ))}

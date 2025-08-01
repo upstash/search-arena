@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { after } from "next/server";
 
 // Input validation schemas
@@ -12,16 +12,24 @@ const createBattleSchema = z.object({
 
 // Battle router
 export const battleRouter = router({
-  // Get all battles
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    return ctx.battleService.getAllBattles();
-  }),
+  // Get all battles for the current session
+  getAll: publicProcedure
+    .input(z.object({ isDemo: z.boolean() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.battleService.getAllBattles({
+        sessionId: ctx.sessionId,
+        isDemo: input.isDemo,
+      });
+    }),
 
   // Get battle by ID
   getById: publicProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      const res = await ctx.battleService.getBattleById(input.id);
+      const res = await ctx.battleService.getBattleById(
+        input.id,
+        ctx.sessionId
+      );
 
       return res;
     }),
@@ -34,7 +42,8 @@ export const battleRouter = router({
         input.label,
         input.databaseId1,
         input.databaseId2,
-        input.queries
+        input.queries,
+        ctx.sessionId
       );
 
       after(async () => {
@@ -63,13 +72,25 @@ export const battleRouter = router({
   delete: publicProcedure
     .input(z.object({ battleId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.battleService.deleteBattle(input.battleId);
+      return ctx.battleService.deleteBattle(input.battleId, ctx.sessionId);
     }),
 
   // Get battle query results
   getQueryResults: publicProcedure
     .input(z.object({ battleId: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      return ctx.battleService.getBattleQueryResults(input.battleId);
+      return ctx.battleService.getBattleQueryResults(
+        input.battleId,
+        ctx.sessionId
+      );
+    }),
+
+  edit: protectedProcedure
+    .input(z.object({ battleId: z.uuid(), isDemo: z.boolean() }))
+    .mutation(async ({ ctx, input: { battleId, isDemo } }) => {
+      return ctx.battleService.editBattle({
+        battleId,
+        isDemo,
+      });
     }),
 });
