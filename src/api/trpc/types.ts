@@ -9,3 +9,7 @@ export type NewDatabase = RouterInput["database"]["create"];
 
 export type NewBattle = RouterInput["battle"]["create"];
 export type BattleResult = RouterOutput["battle"]["getAll"][number];
+
+export type BattleDetails = RouterOutput["battle"]["getById"];
+
+export type BattleQuery = BattleDetails["queries"][number];

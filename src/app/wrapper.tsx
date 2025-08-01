@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { BattleHeader } from "@/components/battle-details";
+import { BattleHeader } from "@/components/details/header";
 
 export const Wrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();

@@ -149,15 +149,4 @@ export const searchResultsRelations = relations(searchResults, ({ one }) => ({
   }),
 }));
 
-// Types for better type safety
-export type Database = typeof databases.$inferSelect;
-export type NewDatabase = typeof databases.$inferInsert;
-
-export type Battle = typeof battles.$inferSelect;
-export type NewBattle = typeof battles.$inferInsert;
-
 export type BattleQuery = typeof battleQueries.$inferSelect;
-export type NewBattleQuery = typeof battleQueries.$inferInsert;
-
-export type SearchResult = typeof searchResults.$inferSelect;
-export type NewSearchResult = typeof searchResults.$inferInsert;
