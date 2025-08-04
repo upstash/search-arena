@@ -316,7 +316,13 @@ export class BattleService {
 
     // If sessionId is provided and battle has a sessionId, verify they match
     // Only return the battle if it belongs to the current session or has no session ID
-    if (sessionId && battle.sessionId && battle.sessionId !== sessionId) {
+    // Everyone can access demo battles so no sessionId check is needed
+    if (
+      !battle.isDemo &&
+      sessionId &&
+      battle.sessionId &&
+      battle.sessionId !== sessionId
+    ) {
       throw new Error(`Battle ${battleId} not found`);
     }
 
