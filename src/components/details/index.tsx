@@ -20,19 +20,13 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     if (battle?.status === "in_progress") {
       intervalId = setInterval(() => {
         utils.battle.getById.invalidate({ id: battleId });
-        utils.battle.getQueryResults.invalidate({ battleId });
       }, 3000);
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [
-    battle?.status,
-    battleId,
-    utils.battle.getById,
-    utils.battle.getQueryResults,
-  ]);
+  }, [battle?.status, battleId, utils.battle.getById]);
 
   if (!battle || battle?.queries.length === 0) return <div>Loading</div>;
 

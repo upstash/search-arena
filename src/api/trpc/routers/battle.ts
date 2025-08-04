@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import {
+  protectedProcedure,
+  publicProcedure,
+  ratelimitProcedure,
+  router,
+} from "../trpc";
 import { after } from "next/server";
 
 // Input validation schemas
@@ -23,7 +28,7 @@ export const battleRouter = router({
     }),
 
   // Get battle by ID
-  getById: publicProcedure
+  getById: ratelimitProcedure("get", 100)
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const res = await ctx.battleService.getBattleById(
@@ -35,7 +40,7 @@ export const battleRouter = router({
     }),
 
   // Create a new battle
-  create: publicProcedure
+  create: ratelimitProcedure("scan", 4)
     .input(createBattleSchema)
     .mutation(async ({ ctx, input }) => {
       const { battle, sideEffect } = await ctx.battleService.createBattle(
@@ -54,7 +59,7 @@ export const battleRouter = router({
     }),
 
   // Retry a failed battle
-  retry: publicProcedure
+  retry: ratelimitProcedure("scan", 4)
     .input(z.object({ battleId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { success, sideEffect } = await ctx.battleService.retryBattle(
@@ -73,16 +78,6 @@ export const battleRouter = router({
     .input(z.object({ battleId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.battleService.deleteBattle(input.battleId, ctx.sessionId);
-    }),
-
-  // Get battle query results
-  getQueryResults: publicProcedure
-    .input(z.object({ battleId: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.battleService.getBattleQueryResults(
-        input.battleId,
-        ctx.sessionId
-      );
     }),
 
   edit: protectedProcedure
