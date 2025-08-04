@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 
 // Input validation schemas
 const createDatabaseSchema = z.object({
@@ -19,8 +19,10 @@ const updateDatabaseSchema = z.object({
 // Database router
 export const databaseRouter = router({
   // Get all databases
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.databaseService.getAllDatabases();
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    return ctx.databaseService.getAllDatabases({
+      includeCredentials: ctx.isAdmin,
+    });
   }),
 
   // Get database by ID

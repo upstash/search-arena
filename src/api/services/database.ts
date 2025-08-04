@@ -6,9 +6,16 @@ export class DatabaseService {
   /**
    * Get all databases
    */
-  async getAllDatabases() {
+  async getAllDatabases({
+    includeCredentials = false,
+  }: {
+    includeCredentials?: boolean;
+  }) {
     return db.query.databases.findMany({
       orderBy: (databases, { asc }) => [asc(databases.label)],
+      columns: {
+        credentials: includeCredentials,
+      },
     });
   }
 
