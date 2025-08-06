@@ -19,7 +19,6 @@
 import { algoliasearch } from "algoliasearch";
 import { Search } from "@upstash/search";
 import dotenv from "dotenv";
-import { exit } from "process";
 
 // Load environment variables
 dotenv.config();
@@ -63,13 +62,6 @@ interface AlgoliaHit {
   title?: string;
   description?: string;
   content?: string;
-  [key: string]: unknown;
-}
-
-// Define the type for Upstash content
-interface UpstashContent {
-  title: string;
-  description: string;
   [key: string]: unknown;
 }
 

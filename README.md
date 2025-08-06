@@ -5,9 +5,9 @@ A powerful web application for comparing search results from different providers
 ## Prerequisites
 
 - Node.js 18+
-- pnpm (recommended) or npm
 - PostgreSQL database
 - Google API Key (for AI features)
+- Optional Upstash Redis credentials for rate limiting
 
 ## Getting Started
 
@@ -55,7 +55,7 @@ pnpm dev
 ### Adding Search Providers
 
 1. Click "Add Database" to configure a new search provider
-2. Select your provider (Upstash, Algolia, etc.)
+2. Select your provider, currently only Upstash and Algolia are supported
 3. Enter credentials in the .env format:
 
 **For Upstash:**
@@ -78,29 +78,6 @@ ALGOLIA_INDEX=your-index-name
 
 1. Click "New Battle" to create a search comparison
 2. Select two databases to compare
-3. Add your search queries
-4. Run the battle to see comparative results
-5. View detailed results in the sortable data table
-
-## Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable UI components
-├── lib/                 # Utility functions and configurations
-├── server/              # tRPC server and database logic
-└── types/               # TypeScript type definitions
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
-
-## License
-
-This project is private and proprietary.
+3. Add your search queries in the text area, one query per line
+4. Run the battle
+5. View and compare the results
