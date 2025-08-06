@@ -58,21 +58,6 @@ export const battleRouter = router({
       return battle;
     }),
 
-  // Retry a failed battle
-  retry: ratelimitProcedure("scan", 4)
-    .input(z.object({ battleId: z.uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const { success, sideEffect } = await ctx.battleService.retryBattle(
-        input.battleId
-      );
-
-      after(async () => {
-        await sideEffect();
-      });
-
-      return { success };
-    }),
-
   // Delete a battle
   delete: publicProcedure
     .input(z.object({ battleId: z.uuid() }))
