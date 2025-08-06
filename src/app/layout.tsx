@@ -5,6 +5,7 @@ import { TRPCProvider } from "./providers";
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Wrapper } from "./wrapper";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           <ReactQueryDevtools initialIsOpen={false} />
           <Wrapper>{children}</Wrapper>
         </TRPCProvider>
+        <Toaster />
       </body>
     </html>
   );
