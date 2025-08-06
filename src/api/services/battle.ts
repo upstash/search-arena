@@ -283,9 +283,22 @@ export class BattleService {
     return await db.query.battles.findMany({
       where: combinedFilters,
       orderBy: (battles, { desc }) => [desc(battles.createdAt)],
+      columns: {
+        sessionId: false,
+      },
       with: {
-        database1: true,
-        database2: true,
+        database1: {
+          columns: {
+            label: true,
+            provider: true,
+          },
+        },
+        database2: {
+          columns: {
+            label: true,
+            provider: true,
+          },
+        },
       },
     });
   }
@@ -295,17 +308,37 @@ export class BattleService {
    */
   async getBattleById(battleId: string, sessionId?: string) {
     const battle = await db.query.battles.findFirst({
-      where: eq(schema.battles.id, battleId),
+      // For all, battleId is checked
+      // For demo, don't care about the sessionId
+      // For the rest, sessionId is required
+      where: and(
+        eq(schema.battles.id, battleId),
+        sessionId
+          ? or(
+              eq(schema.battles.isDemo, true),
+              eq(schema.battles.sessionId, sessionId)
+            )
+          : undefined
+      ),
+      columns: {
+        sessionId: false,
+      },
       with: {
-        database1: true,
-        database2: true,
+        database1: {
+          columns: {
+            label: true,
+            provider: true,
+          },
+        },
+        database2: {
+          columns: {
+            label: true,
+            provider: true,
+          },
+        },
         queries: {
           with: {
-            results: {
-              with: {
-                database: true,
-              },
-            },
+            results: true,
           },
         },
       },
@@ -313,18 +346,6 @@ export class BattleService {
 
     // If battle not found, return null
     if (!battle) throw new Error(`Battle ${battleId} not found`);
-
-    // If sessionId is provided and battle has a sessionId, verify they match
-    // Only return the battle if it belongs to the current session or has no session ID
-    // Everyone can access demo battles so no sessionId check is needed
-    if (
-      !battle.isDemo &&
-      sessionId &&
-      battle.sessionId &&
-      battle.sessionId !== sessionId
-    ) {
-      throw new Error(`Battle ${battleId} not found`);
-    }
 
     return battle;
   }

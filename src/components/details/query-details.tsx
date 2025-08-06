@@ -15,6 +15,11 @@ export function QueryDetails({
 }) {
   const [hideDescriptions, setHideDescriptions] = useState(false);
 
+  const database =
+    selectedQuery.results.at(0)?.databaseId === battle.databaseId1
+      ? battle.database1
+      : battle.database2;
+
   return (
     <motion.div
       className="flex-grow overflow-y-auto border rounded bg-white"
@@ -104,8 +109,8 @@ export function QueryDetails({
                       className="text-xs"
                       style={{
                         backgroundColor:
-                          PROVIDERS[result.database.provider].color["100"],
-                        color: PROVIDERS[result.database.provider].color["800"],
+                          PROVIDERS[database.provider].color["100"],
+                        color: PROVIDERS[database.provider].color["800"],
                       }}
                     >
                       Score: {result.score}
