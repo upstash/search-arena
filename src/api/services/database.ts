@@ -11,12 +11,14 @@ export class DatabaseService {
   }: {
     includeCredentials?: boolean;
   }) {
-    return db.query.databases.findMany({
+    const result = await db.query.databases.findMany({
       orderBy: (databases, { asc }) => [asc(databases.label)],
-      columns: {
-        credentials: includeCredentials,
-      },
     });
+
+    return result.map((database) => ({
+      ...database,
+      credentials: includeCredentials ? database.credentials : undefined,
+    }));
   }
 
   /**
