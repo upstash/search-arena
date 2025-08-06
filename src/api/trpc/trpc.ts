@@ -29,6 +29,12 @@ export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
  */
 export const ratelimitProcedure = (id: string, limit: number) =>
   publicProcedure.use(async ({ ctx, next }) => {
+    if (
+      !process.env.UPSTASH_REDIS_REST_URL ||
+      !process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      return next();
+    }
     // Create a new ratelimiter instance
     const ratelimit = new Ratelimit({
       redis: Redis.fromEnv(),
