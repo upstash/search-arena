@@ -11,7 +11,7 @@ import { Button } from "./ui/button";
 
 export function BattleResults({ isDemo }: { isDemo: boolean }) {
   const [battleModalOpen, setBattleModalOpen] = useState(false);
-  const { data: battleResults } = trpc.battle.getAll.useQuery({
+  const { data: battleResults, isLoading } = trpc.battle.getAll.useQuery({
     isDemo,
   });
 
@@ -54,7 +54,7 @@ export function BattleResults({ isDemo }: { isDemo: boolean }) {
         )}
       </motion.div>
 
-      {battleResults?.length === 0 ? (
+      {battleResults?.length === 0 && !isLoading ? (
         <Card>
           <CardContent className="text-center py-8">
             <motion.div

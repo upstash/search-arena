@@ -284,7 +284,7 @@ export default function BattleResultsDataTable({
 }) {
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
-  const { data: battleResults } = trpc.battle.getAll.useQuery(
+  const { data: battleResults, isLoading } = trpc.battle.getAll.useQuery(
     {
       isDemo,
     },
@@ -292,6 +292,7 @@ export default function BattleResultsDataTable({
       refetchInterval: shouldRefetch ? 4000 : undefined,
     }
   );
+  console.log("isLoading", isLoading);
   useEffect(() => {
     if (isDemo) return;
 
@@ -450,6 +451,12 @@ export default function BattleResultsDataTable({
                   ))}
                 </TableRow>
               ))
+            ) : isLoading ? (
+              <TableRow>
+                <TableCell colSpan={9999} className="h-24 text-center">
+                  <Loader2 className="animate-spin inline text-zinc-600" />
+                </TableCell>
+              </TableRow>
             ) : (
               <TableRow>
                 <TableCell colSpan={9999} className="h-24 text-center">
