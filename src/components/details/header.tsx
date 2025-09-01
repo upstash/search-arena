@@ -3,6 +3,7 @@ import { Trophy } from "lucide-react";
 import { motion } from "motion/react";
 import { ProviderBadge } from "../provider-badge";
 import { Checkbox } from "../ui/checkbox";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const BattleHeader = ({ battleId }: { battleId: string }) => {
   const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
@@ -50,6 +51,7 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
   );
 };
 export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
+  const { isAdmin } = useIsAdmin();
   const utils = trpc.useUtils();
   const { mutate, isPending } = trpc.battle.edit.useMutation({
     onSuccess: () => {
@@ -61,6 +63,11 @@ export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
   const { data: battle, isLoading } = trpc.battle.getById.useQuery({
     id: battleId,
   });
+
+  // Hide the checkbox if user is not admin
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="flex items-center space-x-2">

@@ -36,6 +36,7 @@ import { BattleResult } from "@/api/trpc";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
@@ -402,70 +403,105 @@ export default function BattleResultsDataTable({
         </div>
       )}
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="skeleton-table"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
                     </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-gray-100"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-0">
-                      <Link
-                        href={`/battle/${row.original.id}`}
-                        className="block p-4 cursor-pointer"
-                        onClick={(e) => {
-                          // Prevent navigation if clicking on buttons or interactive elements
-                          if ((e.target as HTMLElement).closest("button")) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </Link>
-                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="h-12">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))
-            ) : isLoading ? (
-              <TableRow>
-                <TableCell colSpan={9999} className="h-24 text-center">
-                  <Loader2 className="animate-spin inline text-zinc-600" />
-                </TableCell>
-              </TableRow>
-            ) : (
-              <TableRow>
-                <TableCell colSpan={9999} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                </TableBody>
+              </Table>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="real-table"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className="hover:bg-gray-100"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="p-0">
+                            <Link
+                              href={`/battle/${row.original.id}`}
+                              className="block p-4 cursor-pointer transition-all hover:bg-gray-50"
+                              onClick={(e) => {
+                                // Prevent navigation if clicking on buttons or interactive elements
+                                if (
+                                  (e.target as HTMLElement).closest("button")
+                                ) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }
+                              }}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </Link>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9999} className="h-24 text-center">
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,6 +1,73 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* View Transitions for enhanced page navigation */
+@view-transition {
+  navigation: auto;
+}
+
+/* Define view transition names for consistent elements */
+.view-transition-main {
+  view-transition-name: main;
+}
+
+.view-transition-header {
+  view-transition-name: header;
+}
+
+.view-transition-title {
+  view-transition-name: title;
+}
+
+.view-transition-battle-details {
+  view-transition-name: battle-details;
+}
+
+.view-transition-query-list {
+  view-transition-name: query-list;
+}
+
+.view-transition-query-details {
+  view-transition-name: query-details;
+}
+
+/* Smooth transition animations */
+::view-transition-old(main),
+::view-transition-new(main) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Title should smoothly move to new position */
+::view-transition-old(title),
+::view-transition-new(title) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+}
+
+/* Override default transition for title - it should morph position smoothly */
+::view-transition-group(title) {
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(battle-details),
+::view-transition-new(battle-details) {
+  animation-duration: 0.25s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(query-list),
+::view-transition-new(query-list) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(query-details),
+::view-transition-new(query-details) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease-in-out;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

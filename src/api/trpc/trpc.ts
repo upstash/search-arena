@@ -31,7 +31,8 @@ export const ratelimitProcedure = (id: string, limit: number) =>
   publicProcedure.use(async ({ ctx, next }) => {
     if (
       !process.env.UPSTASH_REDIS_REST_URL ||
-      !process.env.UPSTASH_REDIS_REST_TOKEN
+      !process.env.UPSTASH_REDIS_REST_TOKEN ||
+      ctx.isAdmin
     ) {
       return next();
     }

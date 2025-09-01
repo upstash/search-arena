@@ -5,6 +5,7 @@ import { trpc } from "@/api/trpc/client";
 import { SortOptions, sortQueryResults } from "./query-list-sort-select";
 import { QueryDetails } from "./query-details";
 import { QueryList } from "./query-list";
+import { BattleDetailsSkeleton } from "./skeleton";
 
 export function BattleDetails({ battleId }: { battleId: string }) {
   const utils = trpc.useUtils();
@@ -28,7 +29,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     };
   }, [battle?.status, battleId, utils.battle.getById]);
 
-  if (!battle || battle?.queries.length === 0) return <div>Loading</div>;
+  if (!battle || battle?.queries.length === 0) return <BattleDetailsSkeleton />;
 
   const sortedQueries = sortQueryResults({
     // @ts-expect-error BattleQuery type mismatch
@@ -40,20 +41,24 @@ export function BattleDetails({ battleId }: { battleId: string }) {
   const selectedQuery = sortedQueries[selectedQueryIndex];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 view-transition-battle-details">
       <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-150px)] min-h-[500px]">
         {/* Query List Sidebar */}
-        <QueryList
-          sortedQueries={sortedQueries}
-          battle={battle}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          selectedQueryIndex={selectedQueryIndex}
-          setSelectedQueryIndex={setSelectedQueryIndex}
-        />
+        <div className="view-transition-query-list">
+          <QueryList
+            sortedQueries={sortedQueries}
+            battle={battle}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            selectedQueryIndex={selectedQueryIndex}
+            setSelectedQueryIndex={setSelectedQueryIndex}
+          />
+        </div>
 
         {/* Query Details Main Content */}
-        <QueryDetails selectedQuery={selectedQuery} battle={battle} />
+        <div className="view-transition-query-details">
+          <QueryDetails selectedQuery={selectedQuery} battle={battle} />
+        </div>
       </div>
     </div>
   );

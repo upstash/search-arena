@@ -30,7 +30,7 @@ export function BattleResults({ isDemo }: { isDemo: boolean }) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className="flex justify-between items-start"
       >
         <div>
@@ -55,49 +55,33 @@ export function BattleResults({ isDemo }: { isDemo: boolean }) {
       </motion.div>
 
       {battleResults?.length === 0 && !isLoading ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            >
-              <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            </motion.div>
-            <motion.h3
-              className="text-sm font-medium text-gray-900 mb-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              No battles yet
-            </motion.h3>
-            <motion.p
-              className="text-xs text-gray-600"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              Start your first database comparison battle
-            </motion.p>
-            <Button
-              onClick={() => setBattleModalOpen(true)}
-              className="mt-4"
-              variant={"outline"}
-            >
-              <Plus />
-              New Battle
-            </Button>
-          </CardContent>
-        </Card>
+        <div>
+          <Card>
+            <CardContent className="text-center py-8">
+              <div>
+                <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-900 mb-1">
+                No battles yet
+              </h3>
+              <p className="text-xs text-gray-600">
+                Start your first database comparison battle
+              </p>
+              <Button
+                onClick={() => setBattleModalOpen(true)}
+                className="mt-4"
+                variant={"outline"}
+              >
+                <Plus />
+                New Battle
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div>
           <BattleResultsDataTable isDemo={isDemo} />
-        </motion.div>
+        </div>
       )}
     </div>
   );
