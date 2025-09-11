@@ -180,11 +180,16 @@ const useBattleTable = ({
 
           if (
             battle.status !== "completed" ||
-            !battle.meanScoreDb1 ||
-            !battle.meanScoreDb2
+            battle.meanScoreDb1 === null ||
+            battle.meanScoreDb1 === undefined ||
+            battle.meanScoreDb2 === null ||
+            battle.meanScoreDb2 === undefined
           ) {
             return <span className="text-xs text-gray-400">-</span>;
           }
+
+          // Check if both scores are 0 (LLM disabled)
+          const isLLMDisabled = score1 === 0 && score2 === 0;
 
           return (
             <div className="flex items-center space-x-4">
@@ -192,7 +197,7 @@ const useBattleTable = ({
                 <span className="text-sm font-bold text-blue-600">
                   {battle.meanScoreDb1}
                 </span>
-                {score1 > score2 && (
+                {!isLLMDisabled && score1 > score2 && (
                   <Trophy className="h-3 w-3 text-yellow-500" />
                 )}
               </div>
@@ -201,13 +206,18 @@ const useBattleTable = ({
                 <span className="text-sm font-bold text-green-600">
                   {battle.meanScoreDb2}
                 </span>
-                {score2 > score1 && (
+                {!isLLMDisabled && score2 > score1 && (
                   <Trophy className="h-3 w-3 text-yellow-500" />
                 )}
-                {score1 === score2 && (
+                {!isLLMDisabled && score1 === score2 && (
                   <Trophy className="h-3 w-3 text-gray-400" />
                 )}
               </div>
+              {isLLMDisabled && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  LLM Disabled
+                </span>
+              )}
             </div>
           );
         },

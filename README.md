@@ -6,7 +6,7 @@ A powerful web application for comparing search results from different providers
 
 - Node.js 18+
 - PostgreSQL database
-- Google API Key (for AI features)
+- Google API Key (for LLM evaluation, optional)
 - Optional Upstash Redis credentials for rate limiting
 
 ## Getting Started
@@ -32,7 +32,7 @@ Create a `.env` file in the root directory with the following variables:
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/search_arena"
 
-# Google AI
+# Google AI (for LLM evaluation, optional)
 GOOGLE_API_KEY="your-google-api-key"
 ```
 

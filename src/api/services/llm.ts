@@ -1,7 +1,6 @@
 import { SearchResult } from "../providers";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { createStreamableUI, createStreamableValue } from "ai/rsc";
-import { ReactNode } from "react";
+import { google } from "@ai-sdk/google";
+import { generateText } from "ai";
 
 interface EvaluationResult {
   score: number;
@@ -9,22 +8,21 @@ interface EvaluationResult {
 }
 
 export class LLMService {
-  private genAI: GoogleGenerativeAI;
   private modelName = "gemini-2.5-flash";
+  private hasApiKey: boolean;
 
-  constructor(apiKey?: string) {
-    // Use environment variable if apiKey is not provided
-    const key = apiKey || process.env.GOOGLE_API_KEY || "";
-    if (!key) {
-      console.warn(
-        "No Google API key provided. LLM functionality will be limited."
-      );
-    }
-    this.genAI = new GoogleGenerativeAI(key);
+  constructor() {
+    const key =
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      "";
+
+    this.hasApiKey = !!key;
   }
 
   /**
    * Evaluates search results and assigns a score using Gemini 2.5 Flash
+   * If no API key is available, returns fallback scores of 0
    */
   async evaluateSearchResults(
     query: string,
@@ -35,12 +33,21 @@ export class LLMService {
     db2: EvaluationResult;
     llmDuration: number;
   }> {
-    if (!this.genAI) {
-      throw new Error("Google API key is required for LLM evaluation");
+    // Return fallback scores if no API key is available
+    if (!this.hasApiKey) {
+      console.log("No LLM API key available, returning fallback scores");
+      return {
+        db1: {
+          score: 0,
+          feedback: "",
+        },
+        db2: {
+          score: 0,
+          feedback: "",
+        },
+        llmDuration: 0,
+      };
     }
-
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
-
     const formatOutput = (results: SearchResult[]) => {
       return results
         .map((result, index) => {
@@ -82,9 +89,31 @@ Provide your evaluation in the following JSON format only:
 
     // Generate content with the model and measure timing
     const llmStart = performance.now();
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    let result;
+    let text;
+    try {
+      result = await generateText({
+        model: google(this.modelName),
+        prompt: prompt,
+      });
+      text = result.text;
+    } catch (error) {
+      console.error("LLM API call failed:", error);
+      // Return fallback scores on API failure
+      return {
+        db1: {
+          score: 0,
+          feedback:
+            "LLM evaluation failed due to API error. Results can still be reviewed manually.",
+        },
+        db2: {
+          score: 0,
+          feedback:
+            "LLM evaluation failed due to API error. Results can still be reviewed manually.",
+        },
+        llmDuration: 0,
+      };
+    }
     const llmEnd = performance.now();
     const llmDuration = llmEnd - llmStart;
 
@@ -124,63 +153,5 @@ Provide your evaluation in the following JSON format only:
       console.error("Failed to parse LLM response:", parseError);
       throw new Error("Failed to parse LLM evaluation response");
     }
-  }
-
-  /**
-   * Stream evaluation results using Vercel's AI SDK
-   * This method can be used for real-time feedback in the UI
-   */
-  async streamEvaluation(query: string, results: SearchResult[]) {
-    const ui = createStreamableUI();
-    const feedbackStream = createStreamableValue("");
-
-    // Start async process to generate feedback
-    (async () => {
-      try {
-        if (!this.genAI) {
-          feedbackStream.append(
-            "Error: Google API key is required for evaluation"
-          );
-          feedbackStream.done();
-          return;
-        }
-
-        const model = this.genAI.getGenerativeModel({ model: this.modelName });
-
-        // Format the search results for the prompt
-        const formattedResults = results
-          .map((result, index) => {
-            return `Result ${index + 1}:\nTitle: ${result.title}\nDescription: ${result.description || "No description"}\nURL: ${result.url}\n`;
-          })
-          .join("\n");
-
-        // Create the prompt for evaluation
-        const prompt = `You are a search quality evaluator. Evaluate the relevance of the following search results for the query: "${query}"
-
-${formattedResults}
-
-Provide a detailed analysis of the search results quality.`;
-
-        // Generate streaming content with the model
-        const result = await model.generateContentStream(prompt);
-
-        // Stream the response chunks
-        for await (const chunk of result.stream) {
-          const chunkText = chunk.text();
-          feedbackStream.append(chunkText);
-        }
-
-        feedbackStream.done();
-      } catch (error) {
-        console.error("Error streaming evaluation:", error);
-        feedbackStream.append(
-          `Error evaluating results: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
-        feedbackStream.done();
-      }
-    })();
-
-    ui.append(feedbackStream as unknown as ReactNode);
-    return ui;
   }
 }

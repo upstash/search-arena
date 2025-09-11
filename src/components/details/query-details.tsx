@@ -36,7 +36,8 @@ export function QueryDetails({
             transition={{ delay: 0.3 }}
           >
             Results: &quot;{selectedQuery.queryText}&quot;
-            {selectedQuery.results.at(0)?.llmDuration && (
+            {selectedQuery.results.at(0)?.llmDuration &&
+            Number(selectedQuery.results.at(0)?.llmDuration) > 0 ? (
               <Badge className="bg-purple-100 text-purple-800 text-xs">
                 LLM:{" "}
                 {(
@@ -44,6 +45,12 @@ export function QueryDetails({
                 ).toFixed(1)}
                 s
               </Badge>
+            ) : (
+              selectedQuery.results.at(0)?.score === "0" && (
+                <Badge className="bg-gray-100 text-gray-600 text-xs">
+                  LLM: Disabled
+                </Badge>
+              )
             )}
           </motion.h2>
           <motion.div
@@ -105,16 +112,19 @@ export function QueryDetails({
                       : battle.database2.label}
                   </h3>
                   <div className="flex gap-1">
-                    <Badge
-                      className="text-xs"
-                      style={{
-                        backgroundColor:
-                          PROVIDERS[database.provider].color["100"],
-                        color: PROVIDERS[database.provider].color["800"],
-                      }}
-                    >
-                      Score: {result.score}
-                    </Badge>
+                    {(result.score && Number(result.score) > 0) ||
+                      (result.llmFeedback && (
+                        <Badge
+                          className="text-xs"
+                          style={{
+                            backgroundColor:
+                              PROVIDERS[database.provider].color["100"],
+                            color: PROVIDERS[database.provider].color["800"],
+                          }}
+                        >
+                          Score: {result.score}
+                        </Badge>
+                      ))}
                     {result.searchDuration && (
                       <Badge className="bg-amber-100 text-amber-800 text-xs">
                         Search: {Number(result.searchDuration).toFixed(0)}ms
@@ -122,9 +132,11 @@ export function QueryDetails({
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 my-2 h-[100px] overflow-scroll">
-                  {result.llmFeedback}
-                </p>
+                {result.llmFeedback && (
+                  <p className="text-xs text-gray-500 my-2 h-[100px] overflow-scroll">
+                    {result.llmFeedback}
+                  </p>
+                )}
                 <div className="space-y-2">
                   <AnimatePresence>
                     {(result.results as SearchResult[]).map((item, index) => (
