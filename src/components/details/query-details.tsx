@@ -46,7 +46,7 @@ export function QueryDetails({
                 s
               </Badge>
             ) : (
-              selectedQuery.results.at(0)?.score === "0" && (
+              selectedQuery.results.at(0)?.score === "-1" && (
                 <Badge className="bg-gray-100 text-gray-600 text-xs">
                   LLM: Disabled
                 </Badge>
@@ -112,19 +112,19 @@ export function QueryDetails({
                       : battle.database2.label}
                   </h3>
                   <div className="flex gap-1">
-                    {(result.score && Number(result.score) > 0) ||
-                      (result.llmFeedback && (
-                        <Badge
-                          className="text-xs"
-                          style={{
-                            backgroundColor:
-                              PROVIDERS[database.provider].color["100"],
-                            color: PROVIDERS[database.provider].color["800"],
-                          }}
-                        >
-                          Score: {result.score}
-                        </Badge>
-                      ))}
+                    {result.score && Number(result.score) !== -1 && (
+                      <Badge
+                        className="text-xs"
+                        style={{
+                          backgroundColor:
+                            PROVIDERS[database.provider].color["100"],
+                          color: PROVIDERS[database.provider].color["800"],
+                        }}
+                      >
+                        Score:{" "}
+                        {Number(result.score) === -1 ? "-" : result.score}
+                      </Badge>
+                    )}
                     {result.searchDuration && (
                       <Badge className="bg-amber-100 text-amber-800 text-xs">
                         Search: {Number(result.searchDuration).toFixed(0)}ms

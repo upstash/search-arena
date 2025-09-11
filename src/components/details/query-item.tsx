@@ -30,6 +30,7 @@ export function QueryItem({
   // Determine winner
   const db1Wins = Number(db1Result?.score) > Number(db2Result?.score);
   const db2Wins = Number(db2Result?.score) > Number(db1Result?.score);
+  const isLLMDisabled = db1Result?.score === "-1" && db2Result?.score === "-1";
 
   return (
     <div
@@ -46,7 +47,7 @@ export function QueryItem({
         <div className="text-red-500 text-xs truncate whitespace-normal max-h-[50px]">
           {queryResult.error}
         </div>
-      ) : (
+      ) : !isLLMDisabled ? (
         <div className="flex items-center justify-between text-xs">
           <div className="flex space-x-2">
             <span className="text-blue-600 font-mono">{db1Result?.score}</span>
@@ -66,7 +67,7 @@ export function QueryItem({
             )}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -42,11 +42,11 @@ export class LLMService {
       console.log("No LLM API key available, returning fallback scores");
       return {
         db1: {
-          score: 0,
+          score: -1,
           feedback: "",
         },
         db2: {
-          score: 0,
+          score: -1,
           feedback: "",
         },
         llmDuration: 0,
@@ -106,14 +106,12 @@ Provide your evaluation in the following JSON format only:
       // Return fallback scores on API failure
       return {
         db1: {
-          score: 0,
-          feedback:
-            "LLM evaluation failed due to API error. Results can still be reviewed manually.",
+          score: -1,
+          feedback: "",
         },
         db2: {
-          score: 0,
-          feedback:
-            "LLM evaluation failed due to API error. Results can still be reviewed manually.",
+          score: -1,
+          feedback: "",
         },
         llmDuration: 0,
       };
