@@ -306,20 +306,10 @@ export class BattleService {
   /**
    * Get battle details by ID
    */
-  async getBattleById(battleId: string, sessionId?: string) {
+  async getBattleById(battleId: string) {
     const battle = await db.query.battles.findFirst({
       // For all, battleId is checked
-      // For demo, don't care about the sessionId
-      // For the rest, sessionId is required
-      where: and(
-        eq(schema.battles.id, battleId),
-        sessionId
-          ? or(
-              eq(schema.battles.isDemo, true),
-              eq(schema.battles.sessionId, sessionId)
-            )
-          : undefined
-      ),
+      where: eq(schema.battles.id, battleId),
       columns: {
         sessionId: false,
       },

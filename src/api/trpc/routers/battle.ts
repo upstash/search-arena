@@ -31,10 +31,7 @@ export const battleRouter = router({
   getById: ratelimitProcedure("get", 100)
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      const res = await ctx.battleService.getBattleById(
-        input.id,
-        ctx.sessionId
-      );
+      const res = await ctx.battleService.getBattleById(input.id);
 
       return res;
     }),
