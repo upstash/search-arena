@@ -219,14 +219,14 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           </div>
 
           <div className="min-w-0">
-            <Label htmlFor="credentials">Credentials</Label>
+            <Label htmlFor="credentials">Config</Label>
             <p className="text-sm text-gray-600 mb-2">
-              Enter your credentials in environment variable format:
+              Enter your config in environment variable format:
             </p>
             <Textarea
               id="credentials"
               {...register("credentials", {
-                required: "Credentials are required",
+                required: "Config is required",
               })}
               placeholder={PROVIDER_TEMPLATES[watchedProvider]}
               className="h-32 font-mono text-sm whitespace-nowrap overflow-x-scroll"

@@ -30,7 +30,8 @@ export class UpstashSearchProvider implements SearchProvider {
       const searchResults = await index.search({
         query,
         limit: 10,
-        reranking: true,
+        reranking: this.credentials.reranking,
+        inputEnrichment: this.credentials.inputEnrichment,
       });
 
       // Transform Upstash search results to the common SearchResult format

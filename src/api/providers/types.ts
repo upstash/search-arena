@@ -26,4 +26,6 @@ export interface UpstashSearchCredentials {
   url: string;
   token: string;
   index: string;
+  reranking: boolean;
+  inputEnrichment: boolean;
 }
