@@ -29,7 +29,7 @@
     "@types/uuid": "^10.0.0",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
-    "@upstash/search": "^0.1.4",
+    "@upstash/search": "^0.1.5",
     "@vercel/functions": "^2.2.7",
     "ai": "^5.0.40",
     "algoliasearch": "^5.33.0",
