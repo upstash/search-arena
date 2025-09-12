@@ -29,7 +29,6 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
-import { unstable_ViewTransition as ViewTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { trpc } from "@/api/trpc/client";
@@ -119,9 +118,7 @@ const useBattleTable = ({
           const battle = row.original;
           return (
             <div className="flex flex-col space-y-1">
-              <ViewTransition name="battle-label">
-                <span className="font-medium text-sm">{battle.label}</span>
-              </ViewTransition>
+              <span className="font-medium text-sm">{battle.label}</span>
             </div>
           );
         },

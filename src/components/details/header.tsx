@@ -28,11 +28,11 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
           )}
       </div>
       <div className="text-2xl font-bold text-blue-600">
-        {battle.meanScoreDb1 === "-1" ? "-" : battle.meanScoreDb1}
+        {Number(battle.meanScoreDb1) === -1 ? undefined : battle.meanScoreDb1}
       </div>
       <div className="text-2xl font-bold text-gray-600">vs</div>
       <div className="text-2xl font-bold text-green-600">
-        {battle.meanScoreDb2 === "-1" ? "-" : battle.meanScoreDb2}
+        {Number(battle.meanScoreDb2) === -1 ? undefined : battle.meanScoreDb2}
       </div>
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium">{battle.database2.label}</span>
