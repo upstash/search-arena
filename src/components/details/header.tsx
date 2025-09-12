@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import { ProviderBadge } from "../provider-badge";
 import { Checkbox } from "../ui/checkbox";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { Tooltip } from "../ui/tooltip";
 import { SimpleTooltip } from "../ui/simple-tooltip";
 
 export const BattleHeader = ({ battleId }: { battleId: string }) => {
