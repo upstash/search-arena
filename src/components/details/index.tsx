@@ -8,13 +8,23 @@ import { QueryList } from "./query-list";
 import { BattleDetailsSkeleton } from "./skeleton";
 import { BattleHeader } from "./header";
 import { motion } from "motion/react";
+import { useQueryState } from "@/hooks/use-query-state";
 
 export function BattleDetails({ battleId }: { battleId: string }) {
   const utils = trpc.useUtils();
   const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
 
-  const [selectedQueryIndex, setSelectedQueryIndex] = useState(0);
-  const [sortBy, setSortBy] = useState<SortOptions>("default");
+  const [selectedQueryIndex, setSelectedQueryIndex] = useQueryState(
+    "query",
+    "0"
+  );
+  const [sortBy, setSortBy] = useQueryState<SortOptions>("sort", "default");
+
+  useEffect(() => {
+    if (Number.isNaN(Number(selectedQueryIndex))) {
+      setSelectedQueryIndex("0");
+    }
+  }, [selectedQueryIndex, setSelectedQueryIndex]);
 
   // Refetching
   useEffect(() => {
@@ -40,7 +50,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     battle,
   });
 
-  const selectedQuery = sortedQueries[selectedQueryIndex];
+  const selectedQuery = sortedQueries[Number(selectedQueryIndex)];
 
   return (
     <motion.div
@@ -76,8 +86,10 @@ export function BattleDetails({ battleId }: { battleId: string }) {
             battle={battle}
             sortBy={sortBy}
             setSortBy={setSortBy}
-            selectedQueryIndex={selectedQueryIndex}
-            setSelectedQueryIndex={setSelectedQueryIndex}
+            selectedQueryIndex={Number(selectedQueryIndex) ?? 0}
+            setSelectedQueryIndex={(index) =>
+              setSelectedQueryIndex(index.toString())
+            }
           />
         </motion.div>
 
