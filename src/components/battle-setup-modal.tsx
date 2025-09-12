@@ -120,7 +120,7 @@ export function BattleSetupModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Edit and Re-run Battle" : "New Battle"}
