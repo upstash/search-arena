@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Settings, Trash2 } from "lucide-react";
+import { Plus, Settings, Trash2, Copy } from "lucide-react";
 import { DatabaseModal } from "./database-modal";
 import { trpc } from "@/api/trpc/client";
 
@@ -20,6 +20,11 @@ export function DatabaseList() {
   const { data: databases } = trpc.database.getAll.useQuery();
   const utils = trpc.useUtils();
   const { mutate: deleteDatabase } = trpc.database.delete.useMutation({
+    onSuccess: () => {
+      utils.database.getAll.invalidate();
+    },
+  });
+  const { mutate: duplicateDatabase } = trpc.database.duplicate.useMutation({
     onSuccess: () => {
       utils.database.getAll.invalidate();
     },
@@ -48,7 +53,7 @@ export function DatabaseList() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 min-h-[92px]">
+      <div className="flex flex-wrap gap-3 min-h-[92px]">
         {databases?.map((database) => (
           <div key={database.id}>
             <Card className="hover:shadow-md transition-shadow">
@@ -67,10 +72,20 @@ export function DatabaseList() {
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 cursor-pointer"
+                        onClick={() => duplicateDatabase({ id: database.id })}
+                        title="Duplicate database"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 cursor-pointer"
                         onClick={() => {
                           setEditingDatabaseId(database.id);
                           setShowDatabaseModal(true);
                         }}
+                        title="Edit database"
                       >
                         <Settings className="h-3 w-3" />
                       </Button>
@@ -79,6 +94,7 @@ export function DatabaseList() {
                         size="sm"
                         className="h-6 w-6 p-0 cursor-pointer"
                         onClick={() => deleteDatabase({ id: database.id })}
+                        title="Delete database"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

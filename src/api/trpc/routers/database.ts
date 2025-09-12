@@ -53,6 +53,13 @@ export const databaseRouter = router({
       });
     }),
 
+  // Duplicate a database
+  duplicate: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.databaseService.duplicateDatabase(input.id);
+    }),
+
   // Delete a database
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))

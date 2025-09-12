@@ -81,6 +81,32 @@ export class DatabaseService {
   }
 
   /**
+   * Duplicate a database
+   */
+  async duplicateDatabase(id: string) {
+    // Get the original database
+    const originalDatabase = await this.getDatabaseById(id);
+
+    if (!originalDatabase) {
+      throw new Error("Database not found");
+    }
+
+    // Create a new database with the same configuration but a new label
+    const duplicatedLabel = `${originalDatabase.label} (Copy)`;
+
+    const [duplicatedDatabase] = await db
+      .insert(schema.databases)
+      .values({
+        label: duplicatedLabel,
+        provider: originalDatabase.provider,
+        credentials: originalDatabase.credentials,
+      })
+      .returning();
+
+    return duplicatedDatabase;
+  }
+
+  /**
    * Delete a database
    */
   async deleteDatabase(id: string) {
