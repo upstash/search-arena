@@ -120,10 +120,10 @@ export class BattleService {
           queryText: string
         ) => {
           const start = performance.now();
-          const results = await provider.search(queryText);
+          const searchResponse = await provider.search(queryText);
           const end = performance.now();
           return {
-            results,
+            searchResponse,
             duration: end - start,
           };
         };
@@ -134,16 +134,22 @@ export class BattleService {
           searchWithTiming(provider2, query.queryText),
         ]);
 
-        console.log("> " + provider1.name, search1.results.at(0));
-        console.log("> " + provider2.name, search2.results.at(0));
+        console.log(
+          "> " + provider1.name,
+          search1.searchResponse.results.at(0)
+        );
+        console.log(
+          "> " + provider2.name,
+          search2.searchResponse.results.at(0)
+        );
 
         // Evaluate results with LLM (timing is handled inside the LLM service)
         console.log(`Evaluating results for query:`, query.queryText);
         const { db1, db2, llmDuration } =
           await this.llmService.evaluateSearchResults(
             query.queryText,
-            search1.results,
-            search2.results
+            search1.searchResponse.results,
+            search2.searchResponse.results
           );
 
         // Store results with timing information
@@ -152,11 +158,12 @@ export class BattleService {
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId1,
-            results: search1.results,
+            results: search1.searchResponse.results,
             score: String(db1.score), // Convert to string for Drizzle compatibility
             llmFeedback: db1.feedback,
             searchDuration: String(search1.duration.toFixed(2)),
             llmDuration: String(llmDuration.toFixed(2)),
+            metadata: search1.searchResponse.metadata,
           })
           .execute();
 
@@ -165,11 +172,12 @@ export class BattleService {
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId2,
-            results: search2.results,
+            results: search2.searchResponse.results,
             score: String(db2.score), // Convert to string for Drizzle compatibility
             llmFeedback: db2.feedback,
             searchDuration: String(search2.duration.toFixed(2)),
             llmDuration: String(llmDuration.toFixed(2)),
+            metadata: search2.searchResponse.metadata,
           })
           .execute();
 

@@ -97,6 +97,8 @@ export const searchResults = pgTable(
     // Timing information in milliseconds
     searchDuration: decimal("search_duration", { precision: 8, scale: 2 }),
     llmDuration: decimal("llm_duration", { precision: 8, scale: 2 }),
+    // Search metadata (enriched input, processing time, etc.)
+    metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => {

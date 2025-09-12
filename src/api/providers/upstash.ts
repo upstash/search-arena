@@ -1,9 +1,8 @@
 import {
   SearchProvider,
-  SearchResult,
+  SearchResponse,
   UpstashSearchCredentials,
 } from "./types";
-import { Search } from "@upstash/search";
 
 export class UpstashSearchProvider implements SearchProvider {
   private credentials: UpstashSearchCredentials;
@@ -13,39 +12,81 @@ export class UpstashSearchProvider implements SearchProvider {
     this.credentials = credentials;
   }
 
-  async search(query: string): Promise<SearchResult[]> {
+  async search(query: string): Promise<SearchResponse> {
     try {
-      // Initialize the Upstash Search client
-      const client = new Search({
-        url: this.credentials.url,
-        token: this.credentials.token,
-      });
+      // Construct the search URL
+      const searchUrl = `${this.credentials.url}/search/${this.credentials.index}`;
 
-      // Access the specified index
-      const index = client.index<{ title: string; description: string }>(
-        this.credentials.index
-      );
-
-      // Perform the search
-      const searchResults = await index.search({
+      // Prepare the request body
+      const requestBody = {
         query,
-        limit: 10,
+        topK: 10,
+        includeMetadata: true,
         reranking: this.credentials.reranking,
-        inputEnrichment: this.credentials.inputEnrichment,
+        _returnEnrichedInput: true,
+      };
+
+      // Make the fetch request
+      const response = await fetch(searchUrl, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.credentials.token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the enriched input header
+      const enrichedInput = response.headers.get(
+        "Upstash-Vector-Enriched-Input"
+      );
+      const decodedEnrichedInput = enrichedInput
+        ? decodeURIComponent(enrichedInput)
+        : undefined;
+
+      if (decodedEnrichedInput) {
+        console.log("Upstash-Vector-Enriched-Input:", decodedEnrichedInput);
+      }
+
+      const data = await response.json();
+
+      type UpstashSearchResult = {
+        id: string;
+        data: string; // JSON string
+        content: {
+          title: string;
+          description: string;
+          [key: string]: unknown;
+        };
+        score: number;
+      };
+      const upstashResults = data.result as UpstashSearchResult[];
 
       // Transform Upstash search results to the common SearchResult format
-      return searchResults.map((result) => {
-        // Extract the document content and metadata
+      const results = upstashResults.map((result) => {
+        // Use the parsed content object instead of the raw data string
         const { id, content, score } = result;
 
         return {
           id,
-          title: content.title ?? "Untitled",
-          description: content.description ?? "No description available",
+          title: content?.title ?? "Untitled",
+          description: content?.description ?? "No description available",
           score: score || 0,
         };
       });
+
+      // Return results with metadata
+      return {
+        results,
+        metadata: {
+          enrichedInput: decodedEnrichedInput,
+          totalResults: upstashResults.length,
+        },
+      };
     } catch (error) {
       console.error("Error searching Upstash:", error);
       throw new Error(

@@ -78,6 +78,13 @@
       "when": 1754055784283,
       "tag": "0010_plain_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1757690335636,
+      "tag": "0011_glorious_gargoyle",
+      "breakpoints": true
     }
   ]
 }

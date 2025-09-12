@@ -1,4 +1,4 @@
-import { AlgoliaCredentials, SearchProvider, SearchResult } from "./types";
+import { AlgoliaCredentials, SearchProvider, SearchResponse } from "./types";
 import { algoliasearch } from "algoliasearch";
 import { createFetchRequester } from "@algolia/requester-fetch";
 
@@ -10,7 +10,7 @@ export class AlgoliaSearchProvider implements SearchProvider {
     this.credentials = credentials;
   }
 
-  async search(query: string): Promise<SearchResult[]> {
+  async search(query: string): Promise<SearchResponse> {
     try {
       // Initialize the Algolia client with application ID and API key
       const client = algoliasearch(
@@ -27,10 +27,12 @@ export class AlgoliaSearchProvider implements SearchProvider {
         objectID?: string;
         title?: string;
         overview?: string;
+        description?: string;
+        content?: string;
       }
 
       // Perform the search using client.search
-      const { results } = await client.search({
+      const { results: searchResults } = await client.search({
         requests: [
           {
             indexName: this.credentials.index,
@@ -43,19 +45,33 @@ export class AlgoliaSearchProvider implements SearchProvider {
       // Transform Algolia results to the common SearchResult format
       // Get hits from the first result
       // TypeScript needs a type assertion here
-      const firstResult = results[0] as {
+      const firstResult = searchResults[0] as {
         hits?: Array<Record<string, unknown>>;
+        processingTimeMS?: number;
       };
       const hits = firstResult?.hits || [];
 
       // @ts-expect-error alksjdalksjd
-      return hits.map((hit: AlgoliaHit) => {
+      const results = hits.map((hit: AlgoliaHit) => {
         return {
-          id: hit.objectID,
-          title: hit.title,
-          description: hit.overview,
+          id: hit.objectID ?? String(hit.id ?? "unknown"),
+          title: hit.title ?? "Untitled",
+          description:
+            hit.overview ??
+            hit.description ??
+            hit.content ??
+            "No description available",
         };
       });
+
+      // Return results with metadata
+      return {
+        results,
+        metadata: {
+          totalResults: hits.length,
+          processingTime: firstResult?.processingTimeMS,
+        },
+      };
     } catch (error) {
       console.error("Error searching Algolia:", error);
       throw new Error(
