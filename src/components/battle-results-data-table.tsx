@@ -29,16 +29,18 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
+import { unstable_ViewTransition as ViewTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { trpc } from "@/api/trpc/client";
-import { BattleResult } from "@/api/trpc";
+import { BattleResult, router } from "@/api/trpc";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useRouter } from "next/navigation";
 
 const emptyArray: BattleResult[] = [];
 
@@ -118,7 +120,9 @@ const useBattleTable = ({
           const battle = row.original;
           return (
             <div className="flex flex-col space-y-1">
-              <span className="font-medium text-sm">{battle.label}</span>
+              <ViewTransition name="battle-label">
+                <span className="font-medium text-sm">{battle.label}</span>
+              </ViewTransition>
             </div>
           );
         },
@@ -288,6 +292,7 @@ export default function BattleResultsDataTable({
 }: {
   isDemo: boolean;
 }) {
+  const router = useRouter();
   const utils = trpc.useUtils();
   const [shouldRefetch, setShouldRefetch] = useState(false);
   const { data: battleResults, isLoading } = trpc.battle.getAll.useQuery(
@@ -469,28 +474,23 @@ export default function BattleResultsDataTable({
                       <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() && "selected"}
-                        className="hover:bg-gray-100"
+                        className="hover:bg-gray-100 cursor-pointer"
+                        onClick={(e) => {
+                          // Prevent navigation if the click is on the action buttons
+                          if (
+                            e.target instanceof HTMLElement &&
+                            e.target.closest("button")
+                          )
+                            return;
+                          router.push(`/battle/${row.original.id}`);
+                        }}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} className="p-0">
-                            <Link
-                              href={`/battle/${row.original.id}`}
-                              className="block p-4 cursor-pointer transition-all hover:bg-gray-50"
-                              onClick={(e) => {
-                                // Prevent navigation if clicking on buttons or interactive elements
-                                if (
-                                  (e.target as HTMLElement).closest("button")
-                                ) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }
-                              }}
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </Link>
+                          <TableCell key={cell.id} className="p-4">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
                           </TableCell>
                         ))}
                       </TableRow>
