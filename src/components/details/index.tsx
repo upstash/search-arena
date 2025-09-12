@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { trpc } from "@/api/trpc/client";
 import { SortOptions, sortQueryResults } from "./query-list-sort-select";
 import { QueryDetails } from "./query-details";

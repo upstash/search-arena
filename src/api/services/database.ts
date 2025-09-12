@@ -140,7 +140,7 @@ export class DatabaseService {
 
       return {
         success: true,
-        resultsCount: results.length,
+        resultsCount: results.results.length,
       };
     } catch (error) {
       console.error("Error testing database connection:", error);
