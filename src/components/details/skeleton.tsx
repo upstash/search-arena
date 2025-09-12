@@ -2,8 +2,51 @@ import { motion } from "motion/react";
 
 export function BattleDetailsSkeleton() {
   return (
-    <div className="space-y-4 view-transition-battle-details">
-      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-150px)] min-h-[500px]">
+    <div className="space-y-6 view-transition-battle-details">
+      {/* Battle Header Skeleton */}
+      <div className="space-y-2">
+        {/* Battle Title Skeleton */}
+        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+
+        {/* Battle Header with Scores Skeleton */}
+        <motion.div
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* Database 1 */}
+          <div className="flex items-center space-x-2">
+            <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+            <div className="h-5 bg-blue-200 rounded w-16 animate-pulse"></div>
+            <div className="h-3 w-3 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          {/* Score 1 */}
+          <div className="h-8 bg-blue-200 rounded w-12 animate-pulse"></div>
+
+          {/* VS */}
+          <div className="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+
+          {/* Score 2 */}
+          <div className="h-8 bg-green-200 rounded w-12 animate-pulse"></div>
+
+          {/* Database 2 */}
+          <div className="flex items-center space-x-2">
+            <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+            <div className="h-5 bg-green-200 rounded w-16 animate-pulse"></div>
+            <div className="h-3 w-3 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          {/* Demo Checkbox */}
+          <div className="flex items-center space-x-2">
+            <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-200px)] min-h-[500px]">
         {/* Query List Sidebar Skeleton */}
         <motion.div
           className="w-full md:w-64 flex-shrink-0 overflow-y-auto border rounded bg-white view-transition-query-list"

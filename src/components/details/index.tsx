@@ -6,6 +6,8 @@ import { SortOptions, sortQueryResults } from "./query-list-sort-select";
 import { QueryDetails } from "./query-details";
 import { QueryList } from "./query-list";
 import { BattleDetailsSkeleton } from "./skeleton";
+import { BattleHeader } from "./header";
+import { motion } from "motion/react";
 
 export function BattleDetails({ battleId }: { battleId: string }) {
   const utils = trpc.useUtils();
@@ -41,10 +43,34 @@ export function BattleDetails({ battleId }: { battleId: string }) {
   const selectedQuery = sortedQueries[selectedQueryIndex];
 
   return (
-    <div className="space-y-4 view-transition-battle-details">
-      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-150px)] min-h-[500px]">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{ viewTransitionName: "battle-details" }}
+    >
+      {/* Battle Header with Label and Scores */}
+      <div className="space-y-2">
+        <motion.h1
+          className="text-2xl font-bold text-gray-900"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          {battle.label}
+        </motion.h1>
+        <BattleHeader battleId={battleId} />
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-200px)] min-h-[500px]">
         {/* Query List Sidebar */}
-        <div className="view-transition-query-list">
+        <motion.div
+          className="view-transition-query-list"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
           <QueryList
             sortedQueries={sortedQueries}
             battle={battle}
@@ -53,13 +79,18 @@ export function BattleDetails({ battleId }: { battleId: string }) {
             selectedQueryIndex={selectedQueryIndex}
             setSelectedQueryIndex={setSelectedQueryIndex}
           />
-        </div>
+        </motion.div>
 
         {/* Query Details Main Content */}
-        <div className="view-transition-query-details">
+        <motion.div
+          className="view-transition-query-details"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
           <QueryDetails selectedQuery={selectedQuery} battle={battle} />
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

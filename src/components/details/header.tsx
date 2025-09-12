@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import { ProviderBadge } from "../provider-badge";
 import { Checkbox } from "../ui/checkbox";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { Tooltip } from "../ui/tooltip";
+import { SimpleTooltip } from "../ui/simple-tooltip";
 
 export const BattleHeader = ({ battleId }: { battleId: string }) => {
   const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
@@ -27,11 +29,11 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
           )}
       </div>
       <div className="text-2xl font-bold text-blue-600">
-        {battle.meanScoreDb1}
+        {battle.meanScoreDb1 === "-1" ? "-" : battle.meanScoreDb1}
       </div>
       <div className="text-2xl font-bold text-gray-600">vs</div>
       <div className="text-2xl font-bold text-green-600">
-        {battle.meanScoreDb2}
+        {battle.meanScoreDb2 === "-1" ? "-" : battle.meanScoreDb2}
       </div>
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium">{battle.database2.label}</span>
@@ -50,6 +52,7 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
     </motion.div>
   );
 };
+
 export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
   const { isAdmin } = useIsAdmin();
   const utils = trpc.useUtils();
@@ -70,17 +73,19 @@ export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
   }
 
   return (
-    <div className="flex items-center space-x-2">
-      <Checkbox
-        id="demo"
-        className="cursor-pointer"
-        disabled={isLoading || isPending}
-        checked={battle?.isDemo ?? "indeterminate"}
-        onCheckedChange={(checked) =>
-          mutate({ battleId, isDemo: checked === true })
-        }
-      />
-      <label htmlFor="demo">Demo</label>
-    </div>
+    <SimpleTooltip content="Show this search result in the main page, under examples.">
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="demo"
+          className="cursor-pointer"
+          disabled={isLoading || isPending}
+          checked={battle?.isDemo ?? "indeterminate"}
+          onCheckedChange={(checked) =>
+            mutate({ battleId, isDemo: checked === true })
+          }
+        />
+        <label htmlFor="demo">Example</label>
+      </div>
+    </SimpleTooltip>
   );
 };
