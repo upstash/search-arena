@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Plus, Settings, Trash2, Copy } from "lucide-react";
 import { DatabaseModal } from "./database-modal";
 import { trpc } from "@/api/trpc/client";
@@ -53,58 +60,81 @@ export function DatabaseList() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 min-h-[92px]">
-        {databases?.map((database) => (
-          <div key={database.id}>
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1 min-w-0 flex flex-col gap-1">
-                    <h3 className="font-medium text-xs truncate">
-                      {database.label}
-                    </h3>
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Label</TableHead>
+              <TableHead>Provider</TableHead>
+              <TableHead>Created At</TableHead>
+              {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {databases?.length ? (
+              databases.map((database) => (
+                <TableRow key={database.id}>
+                  <TableCell className="font-medium">
+                    {database.label}
+                  </TableCell>
+                  <TableCell>
                     <ProviderBadge provider={database.provider} />
-                  </div>
-                  {/* Database actions */}
+                  </TableCell>
+                  <TableCell>
+                    {database.createdAt
+                      ? new Date(database.createdAt).toLocaleDateString()
+                      : "N/A"}
+                  </TableCell>
                   {isAdmin && (
-                    <div className="flex space-x-0.5 ml-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => duplicateDatabase({ id: database.id })}
-                        title="Duplicate database"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => {
-                          setEditingDatabaseId(database.id);
-                          setShowDatabaseModal(true);
-                        }}
-                        title="Edit database"
-                      >
-                        <Settings className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => deleteDatabase({ id: database.id })}
-                        title="Delete database"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => duplicateDatabase({ id: database.id })}
+                          title="Duplicate database"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            setEditingDatabaseId(database.id);
+                            setShowDatabaseModal(true);
+                          }}
+                          title="Edit database"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => deleteDatabase({ id: database.id })}
+                          title="Delete database"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={isAdmin ? 4 : 3}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No databases configured yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       <DatabaseModal

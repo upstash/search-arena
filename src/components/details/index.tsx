@@ -18,13 +18,20 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     "query",
     "0"
   );
-  const [sortBy, setSortBy] = useQueryState<SortOptions>("sort", "default");
+  const [sortByState, setSortBy] = useQueryState<SortOptions>("sort");
+  const sortBy = sortByState ?? "default";
+
+  console.log("sortBy", sortBy);
 
   useEffect(() => {
     if (Number.isNaN(Number(selectedQueryIndex))) {
       setSelectedQueryIndex("0");
     }
   }, [selectedQueryIndex, setSelectedQueryIndex]);
+
+  const index = Number.isNaN(Number(selectedQueryIndex))
+    ? 0
+    : Number(selectedQueryIndex);
 
   // Refetching
   useEffect(() => {
@@ -50,7 +57,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
     battle,
   });
 
-  const selectedQuery = sortedQueries[Number(selectedQueryIndex)];
+  const selectedQuery = sortedQueries[index];
 
   return (
     <motion.div
@@ -86,7 +93,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
             battle={battle}
             sortBy={sortBy}
             setSortBy={setSortBy}
-            selectedQueryIndex={Number(selectedQueryIndex) ?? 0}
+            selectedQueryIndex={index}
             setSelectedQueryIndex={(index) =>
               setSelectedQueryIndex(index.toString())
             }

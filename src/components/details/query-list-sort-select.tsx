@@ -50,11 +50,11 @@ export function QueryListSortSelect({
           </SelectItem>
           <SelectItem value="score-diff-1">
             <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
-            Highlight ↓
+            Overperforms ↓
           </SelectItem>
           <SelectItem value="score-diff-2">
             <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
-            Highlight ↓
+            Overperforms ↓
           </SelectItem>
           <SelectItem value="diff">Diff ↓</SelectItem>
         </SelectContent>
