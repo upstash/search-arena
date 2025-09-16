@@ -131,7 +131,7 @@ const useBattleTable = ({
           return (
             <div className="flex items-center space-x-2">
               <SimpleTooltip content={<ProviderBadge provider={db.provider} />}>
-                <span className="text-sm font-medium truncate max-w-[120px]">
+                <span className="text-sm font-medium truncate max-w-[400px]">
                   {db.label}
                 </span>
               </SimpleTooltip>
@@ -147,7 +147,7 @@ const useBattleTable = ({
           return (
             <div className="flex items-center space-x-2">
               <SimpleTooltip content={<ProviderBadge provider={db.provider} />}>
-                <span className="text-sm font-medium truncate max-w-[120px]">
+                <span className="text-sm font-medium truncate max-w-[400px]">
                   {db.label}
                 </span>
               </SimpleTooltip>
@@ -482,7 +482,7 @@ export default function BattleResultsDataTable({
                         }}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} className="p-4">
+                          <TableCell key={cell.id} className="p-2">
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext()

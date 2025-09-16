@@ -53,10 +53,12 @@ export class LLMService {
       };
     }
     const formatOutput = (results: SearchResult[]) => {
+      // Get the first 10 results
       return results
         .map((result, index) => {
           return `Result ${index + 1}:\nTitle: ${result.title}\nDescription: ${result.description || "No description"}\nURL: ${result.url}\n`;
         })
+        .slice(0, 10)
         .join("\n");
     };
 

@@ -20,9 +20,10 @@ export class UpstashSearchProvider implements SearchProvider {
       // Prepare the request body
       const requestBody = {
         query,
-        topK: 10,
+        topK: this.credentials.topk,
         includeMetadata: true,
         reranking: this.credentials.reranking,
+        inputEnrichment: this.credentials.inputEnrichment,
         _returnEnrichedInput: true,
       };
 
@@ -85,6 +86,9 @@ export class UpstashSearchProvider implements SearchProvider {
         metadata: {
           enrichedInput: decodedEnrichedInput,
           totalResults: upstashResults.length,
+          topk: this.credentials.topk,
+          reranking: this.credentials.reranking,
+          inputEnrichment: this.credentials.inputEnrichment,
         },
       };
     } catch (error) {

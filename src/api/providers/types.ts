@@ -42,4 +42,5 @@ export interface UpstashSearchCredentials {
   index: string;
   reranking: boolean;
   inputEnrichment: boolean;
+  topk: number;
 }

@@ -52,9 +52,19 @@ export function createSearchProvider(
       const upstashUrl = env.UPSTASH_URL;
       const upstashToken = env.UPSTASH_TOKEN;
       const upstashIndex = env.UPSTASH_INDEX;
+
+      // Enabled by default
       const upstashReranking = env.UPSTASH_RERANKING === "false" ? false : true;
       const upstashInputEnrichment =
         env.UPSTASH_INPUT_ENRICHMENT === "false" ? false : true;
+
+      // Default to 10 if not specified or invalid
+      const DEFAULT_TOPK = 10;
+      const upstashTopk = env.UPSTASH_TOPK
+        ? parseInt(env.UPSTASH_TOPK, 10)
+        : DEFAULT_TOPK;
+      const validTopk =
+        !isNaN(upstashTopk) && upstashTopk > 0 ? upstashTopk : DEFAULT_TOPK;
 
       if (!upstashUrl || !upstashToken || !upstashIndex) {
         throw new Error(
@@ -68,6 +78,7 @@ export function createSearchProvider(
         index: upstashIndex,
         reranking: upstashReranking,
         inputEnrichment: upstashInputEnrichment,
+        topk: validTopk,
       });
     default:
       throw new Error(`Unsupported search provider: ${provider}`);

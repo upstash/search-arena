@@ -11,13 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { DatabaseCombobox } from "./database-combobox";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/api/trpc/client";
 import { Loader2Icon } from "lucide-react";
@@ -145,7 +139,7 @@ export function BattleSetupModal({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="databaseId1" className="mb-1">
                 Database 1
@@ -155,22 +149,14 @@ export function BattleSetupModal({
                 control={control}
                 rules={{ required: "Database 1 is required" }}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select database" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {databases?.map((db) => (
-                        <SelectItem
-                          key={db.id}
-                          value={db.id}
-                          disabled={db.id === watch("databaseId2")}
-                        >
-                          {db.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <DatabaseCombobox
+                    databases={databases || []}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select database..."
+                    disabledValue={watch("databaseId2")}
+                    className="w-full"
+                  />
                 )}
               />
               {errors.databaseId1 && (
@@ -188,22 +174,14 @@ export function BattleSetupModal({
                 control={control}
                 rules={{ required: "Database 2 is required" }}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select database" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {databases?.map((db) => (
-                        <SelectItem
-                          key={db.id}
-                          value={db.id}
-                          disabled={db.id === watch("databaseId1")}
-                        >
-                          {db.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <DatabaseCombobox
+                    databases={databases || []}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select database..."
+                    disabledValue={watch("databaseId1")}
+                    className="w-full"
+                  />
                 )}
               />
               {errors.databaseId2 && (
