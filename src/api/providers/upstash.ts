@@ -17,6 +17,9 @@ export class UpstashSearchProvider implements SearchProvider {
       // Construct the search URL
       const searchUrl = `${this.credentials.url}/search/${this.credentials.index}`;
 
+      // Use the configured semantic weight value
+      const semanticWeight = this.credentials.semanticWeight;
+
       // Prepare the request body
       const requestBody = {
         query,
@@ -24,6 +27,7 @@ export class UpstashSearchProvider implements SearchProvider {
         includeMetadata: true,
         reranking: this.credentials.reranking,
         inputEnrichment: this.credentials.inputEnrichment,
+        semanticWeight,
         _returnEnrichedInput: true,
       };
 
@@ -48,10 +52,6 @@ export class UpstashSearchProvider implements SearchProvider {
       const decodedEnrichedInput = enrichedInput
         ? decodeURIComponent(enrichedInput)
         : undefined;
-
-      if (decodedEnrichedInput) {
-        console.log("Upstash-Vector-Enriched-Input:", decodedEnrichedInput);
-      }
 
       const data = await response.json();
 
@@ -89,6 +89,7 @@ export class UpstashSearchProvider implements SearchProvider {
           topk: this.credentials.topk,
           reranking: this.credentials.reranking,
           inputEnrichment: this.credentials.inputEnrichment,
+          semanticWeight: semanticWeight,
         },
       };
     } catch (error) {

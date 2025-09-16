@@ -10,8 +10,11 @@ export const PROVIDERS = {
 UPSTASH_URL=https://your-database.upstash.io
 UPSTASH_TOKEN=your-rest-token
 UPSTASH_INDEX=your-index-name
+
 UPSTASH_RERANKING=true
 UPSTASH_INPUT_ENRICHMENT=true
+UPSTASH_TOPK=10
+UPSTASH_SEMANTIC_WEIGHT=0.75
 `,
   },
   algolia: {

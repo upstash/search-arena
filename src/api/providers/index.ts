@@ -66,6 +66,17 @@ export function createSearchProvider(
       const validTopk =
         !isNaN(upstashTopk) && upstashTopk > 0 ? upstashTopk : DEFAULT_TOPK;
 
+      // Parse semantic weight - default to 0.75 if not specified
+      const DEFAULT_SEMANTIC_WEIGHT = 0.75;
+      let upstashSemanticWeight: number = DEFAULT_SEMANTIC_WEIGHT;
+
+      if (env.UPSTASH_SEMANTIC_WEIGHT) {
+        const parsedWeight = parseFloat(env.UPSTASH_SEMANTIC_WEIGHT);
+        if (!isNaN(parsedWeight) && parsedWeight >= 0 && parsedWeight <= 1) {
+          upstashSemanticWeight = parsedWeight;
+        }
+      }
+
       if (!upstashUrl || !upstashToken || !upstashIndex) {
         throw new Error(
           "Missing Upstash Search credentials: UPSTASH_URL, UPSTASH_TOKEN, and UPSTASH_INDEX are required"
@@ -79,6 +90,7 @@ export function createSearchProvider(
         reranking: upstashReranking,
         inputEnrichment: upstashInputEnrichment,
         topk: validTopk,
+        semanticWeight: upstashSemanticWeight,
       });
     default:
       throw new Error(`Unsupported search provider: ${provider}`);

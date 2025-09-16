@@ -270,14 +270,8 @@ const useBattleTable = ({
     data: battleResults,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
   });
 
   return table;
@@ -408,7 +402,7 @@ export default function BattleResultsDataTable({
           </div>
         </div>
       )}
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
