@@ -214,7 +214,7 @@ const QueryDetailCard = ({
         }}
         transition={{ delay: index * 0.02 }}
         className={cn(
-          "text-gray-600 mb-1",
+          "text-gray-600 mb-1 break-words",
           expanded ? "line-clamp-none" : "line-clamp-3"
         )}
       >
