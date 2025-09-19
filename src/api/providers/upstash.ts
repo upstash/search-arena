@@ -133,22 +133,21 @@ export class UpstashSearchProvider implements SearchProvider {
       const upstashResults = data.result as UpstashSearchResult[];
 
       // Transform Upstash search results to the common SearchResult format
-      const results = upstashResults
-        .map((result) => {
-          // Use the parsed content object instead of the raw data string
-          const { id, content, score } = result;
+      const results = upstashResults.map((result) => {
+        // Use the parsed content object instead of the raw data string
+        const { id, content, score } = result;
 
-          return {
-            id,
-            title: content?.title ?? "Untitled",
-            description: content?.description ?? "No description available",
-            score: score || 0,
-          };
-        })
-        // When reranking is enabled, filter out results with a score less than 0.1
-        .filter((result) =>
-          this.credentials.reranking ? result.score > 0.1 : true
-        );
+        return {
+          id,
+          title: content?.title ?? "Untitled",
+          description: content?.description ?? "No description available",
+          score: score || 0,
+        };
+      });
+      // When reranking is enabled, filter out results with a score less than 0.1
+      // .filter((result) =>
+      //   this.credentials.reranking ? result.score > 0.1 : true
+      // );
 
       // Return results with metadata
       return {
