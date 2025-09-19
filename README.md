@@ -6,7 +6,7 @@ A powerful web application for comparing search results from different providers
 
 - Node.js 18+
 - PostgreSQL database
-- Google API Key (for LLM evaluation, optional)
+- OpenRouter API Key (for LLM evaluation, optional)
 - Optional Upstash Redis credentials for rate limiting
 
 ## Getting Started
@@ -32,8 +32,12 @@ Create a `.env` file in the root directory with the following variables:
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/search_arena"
 
-# Google AI (for LLM evaluation, optional)
-GOOGLE_API_KEY="your-google-api-key"
+# OpenRouter (for LLM evaluation using Gemini 2.5 Flash, optional)
+OPENROUTER_API_KEY="your-openrouter-api-key"
+
+# Optional: Site configuration for OpenRouter
+SITE_URL="http://localhost:3000"
+SITE_NAME="Search Arena"
 ```
 
 ### 4. Database Setup
