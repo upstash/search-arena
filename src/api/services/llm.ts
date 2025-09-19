@@ -1,6 +1,6 @@
 import { SearchResult } from "../providers";
-import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 interface EvaluationResult {
   score: number;
@@ -8,18 +8,11 @@ interface EvaluationResult {
 }
 
 export class LLMService {
-  private modelName = "gemini-2.5-flash";
+  private modelName = "google/gemini-2.5-flash";
   private hasApiKey: boolean;
 
   constructor() {
-    const key =
-      process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-      "";
-
-    if (process.env.GOOGLE_API_KEY) {
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_API_KEY;
-    }
+    const key = process.env.OPENROUTER_API_KEY || "";
 
     this.hasApiKey = !!key;
   }
@@ -98,8 +91,11 @@ Provide your evaluation in the following JSON format only:
     let result;
     let text;
     try {
+      const openrouter = createOpenRouter({
+        apiKey: process.env.OPEN_ROUTER_API_KEY,
+      });
       result = await generateText({
-        model: google(this.modelName),
+        model: openrouter(this.modelName),
         prompt: prompt,
       });
       text = result.text;
