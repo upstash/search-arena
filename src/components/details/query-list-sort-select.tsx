@@ -11,7 +11,9 @@ import { ArrowUpDown } from "lucide-react";
 export type SortOptions =
   | "default"
   | "db1-score"
+  | "db1-score-asc"
   | "db2-score"
+  | "db2-score-asc"
   | "score-diff-1"
   | "score-diff-2"
   | "diff";
@@ -44,9 +46,17 @@ export function QueryListSortSelect({
             <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
             Score ↓
           </SelectItem>
+          <SelectItem value="db1-score-asc">
+            <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
+            Score ↑
+          </SelectItem>
           <SelectItem value="db2-score">
             <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
             Score ↓
+          </SelectItem>
+          <SelectItem value="db2-score-asc">
+            <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
+            Score ↑
           </SelectItem>
           <SelectItem value="score-diff-1">
             <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
@@ -94,8 +104,12 @@ export function sortQueryResults({
     switch (sortBy) {
       case "db1-score":
         return Number(bDb1Result.score) - Number(aDb1Result.score); // Higher scores first
+      case "db1-score-asc":
+        return Number(aDb1Result.score) - Number(bDb1Result.score); // Lower scores first
       case "db2-score":
         return Number(bDb2Result.score) - Number(aDb2Result.score); // Higher scores first
+      case "db2-score-asc":
+        return Number(aDb2Result.score) - Number(bDb2Result.score); // Lower scores first
       case "score-diff-1":
         const firstDiff = Number(bDb1Result.score) - Number(bDb2Result.score);
         const secondDiff = Number(aDb1Result.score) - Number(aDb2Result.score);
