@@ -8,14 +8,21 @@ export class DatabaseService {
    */
   async getAllDatabases({
     includeCredentials = false,
+    isAdmin = false,
   }: {
     includeCredentials?: boolean;
+    isAdmin?: boolean;
   }) {
     const result = await db.query.databases.findMany({
       orderBy: (databases, { asc }) => [asc(databases.label)],
     });
 
-    return result.map((database) => ({
+    // Filter out devOnly databases if user is not admin
+    const filteredResult = isAdmin
+      ? result
+      : result.filter((db) => !db.devOnly);
+
+    return filteredResult.map((database) => ({
       ...database,
       credentials: includeCredentials ? database.credentials : undefined,
     }));
@@ -36,7 +43,8 @@ export class DatabaseService {
   async createDatabase(
     label: string,
     provider: "algolia" | "upstash_search",
-    credentials: string
+    credentials: string,
+    devOnly: boolean = true
   ) {
     // Create the database record with credentials
     const [database] = await db
@@ -45,6 +53,7 @@ export class DatabaseService {
         label,
         provider,
         credentials,
+        devOnly,
       })
       .returning();
 
@@ -59,12 +68,14 @@ export class DatabaseService {
     data: {
       label?: string;
       credentials?: string;
+      devOnly?: boolean;
     }
   ) {
     // Update the database record
     const updateData: Partial<typeof schema.databases.$inferInsert> = {};
     if (data.label) updateData.label = data.label;
     if (data.credentials) updateData.credentials = data.credentials;
+    if (data.devOnly !== undefined) updateData.devOnly = data.devOnly;
 
     if (Object.keys(updateData).length > 0) {
       await db
@@ -100,6 +111,7 @@ export class DatabaseService {
         label: duplicatedLabel,
         provider: originalDatabase.provider,
         credentials: originalDatabase.credentials,
+        devOnly: originalDatabase.devOnly,
       })
       .returning();
 

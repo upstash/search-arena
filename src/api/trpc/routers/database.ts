@@ -6,6 +6,7 @@ const createDatabaseSchema = z.object({
   label: z.string().min(1),
   provider: z.enum(["algolia", "upstash_search"]),
   credentials: z.string().min(1),
+  devOnly: z.boolean().default(true),
 });
 
 export type CreateDatabaseInput = z.infer<typeof createDatabaseSchema>;
@@ -14,6 +15,7 @@ const updateDatabaseSchema = z.object({
   id: z.string().uuid(),
   label: z.string().min(1).optional(),
   credentials: z.string().optional(),
+  devOnly: z.boolean().optional(),
 });
 
 // Database router
@@ -22,6 +24,7 @@ export const databaseRouter = router({
   getAll: publicProcedure.query(async ({ ctx }) => {
     return ctx.databaseService.getAllDatabases({
       includeCredentials: ctx.isAdmin,
+      isAdmin: ctx.isAdmin,
     });
   }),
 
@@ -39,7 +42,8 @@ export const databaseRouter = router({
       return ctx.databaseService.createDatabase(
         input.label,
         input.provider,
-        input.credentials
+        input.credentials,
+        input.devOnly
       );
     }),
 
@@ -50,6 +54,7 @@ export const databaseRouter = router({
       return ctx.databaseService.updateDatabase(input.id, {
         label: input.label,
         credentials: input.credentials,
+        devOnly: input.devOnly,
       });
     }),
 

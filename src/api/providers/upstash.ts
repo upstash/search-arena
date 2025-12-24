@@ -29,6 +29,7 @@ export class UpstashSearchProvider implements SearchProvider {
         inputEnrichment: this.credentials.inputEnrichment,
         semanticWeight,
         _returnEnrichedInput: true,
+        _appendOriginalInputToEnrichmentResult: true,
       };
 
       // Make the fetch request

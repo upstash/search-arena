@@ -35,6 +35,7 @@ export const databases = pgTable("databases", {
   credentials: text("credentials").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  devOnly: boolean("dev_only").default(true).notNull(),
 });
 
 // Battle table

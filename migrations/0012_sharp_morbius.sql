@@ -1,0 +1,1 @@
+ALTER TABLE "databases" ADD COLUMN "dev_only" boolean DEFAULT true NOT NULL;

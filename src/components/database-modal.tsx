@@ -23,6 +23,8 @@ import { trpc } from "@/api/trpc/client";
 import { ProviderBadge } from "./provider-badge";
 import { Database } from "@/api/trpc/types";
 import { Loader2Icon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 interface DatabaseModalProps {
   open: boolean;
@@ -35,6 +37,7 @@ type FormData = {
   label: string;
   provider: "upstash_search" | "algolia";
   credentials: string;
+  devOnly: boolean;
 };
 
 // Provider templates
@@ -52,6 +55,7 @@ ALGOLIA_INDEX=your-index-name`,
 
 export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   const isEditing = !!database;
+  const { isAdmin } = useIsAdmin();
   const {
     register,
     handleSubmit,
@@ -67,6 +71,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
         (database?.provider as "upstash_search" | "algolia") ||
         "upstash_search",
       credentials: database?.credentials || PROVIDER_TEMPLATES.upstash_search,
+      devOnly: database?.devOnly ?? true,
     },
   });
 
@@ -85,6 +90,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
             database.provider as "upstash_search" | "algolia"
           ] ||
           PROVIDER_TEMPLATES.upstash_search,
+        devOnly: database.devOnly ?? true,
       });
     } else {
       reset();
@@ -106,6 +112,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
             label: "",
             provider: "upstash_search",
             credentials: PROVIDER_TEMPLATES.upstash_search,
+            devOnly: true,
           });
         }
       },
@@ -140,6 +147,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
             database.provider as "upstash_search" | "algolia"
           ] ||
           PROVIDER_TEMPLATES.upstash_search,
+        devOnly: database.devOnly ?? true,
       });
     }
   }, [database, reset]);
@@ -150,12 +158,14 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
         id: database.id,
         label: data.label,
         credentials: data.credentials,
+        devOnly: data.devOnly,
       });
     } else {
       await createDatabase({
         label: data.label,
         provider: data.provider,
         credentials: data.credentials,
+        devOnly: data.devOnly,
       });
     }
   };
@@ -241,6 +251,28 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
               </p>
             )}
           </div>
+
+          {isAdmin && (
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="devOnly"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="devOnly"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label
+                htmlFor="devOnly"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Dev Only (only visible in localhost when checked)
+              </Label>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>

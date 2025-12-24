@@ -46,8 +46,10 @@ export class LLMService {
       };
     }
     const formatOutput = (results: SearchResult[]) => {
+      const deduplicatedResults = deduplicateByDescription(results);
+
       // Get the first 10 results
-      return results
+      return deduplicatedResults
         .map((result, index) => {
           return `Result ${index + 1}:\nTitle: ${result.title}\nDescription: ${result.description || "No description"}\nURL: ${result.url}\n`;
         })
@@ -71,8 +73,8 @@ ${formattedResults1}
 Database 2 results:
 ${formattedResults2}
 
-While evaluating, having irrelevant results is not important.
-If the ordering of the results makes sense, and a user can find the things they want, that is important.
+## Evaluation Criteria
+- Having irrelevant results down the list is not important. It is more important that the user can find what they are looking for without having to scroll through the results.
 
 Provide your evaluation in the following JSON format only:
 {
@@ -155,3 +157,14 @@ Provide your evaluation in the following JSON format only:
     }
   }
 }
+
+const deduplicateByDescription = (results: SearchResult[]) => {
+  const contents = new Set<string>();
+  return results.filter((result) => {
+    if (contents.has(result.description)) {
+      return false;
+    }
+    contents.add(result.description);
+    return true;
+  });
+};
