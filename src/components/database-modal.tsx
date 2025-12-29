@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,13 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { ConfigEditor } from "@/components/config-editor";
 import { trpc } from "@/api/trpc/client";
 import { ProviderBadge } from "./provider-badge";
 import { Database } from "@/api/trpc/types";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { validateCredentials } from "@/lib/schemas/validation";
 
 interface DatabaseModalProps {
   open: boolean;
@@ -40,22 +41,32 @@ type FormData = {
   devOnly: boolean;
 };
 
-// Provider templates
-const PROVIDER_TEMPLATES = {
-  upstash_search: `UPSTASH_URL=https://your-database.upstash.io
-UPSTASH_TOKEN=your-rest-token
-UPSTASH_INDEX=your-index-name
-UPSTASH_TOPK=10
-UPSTASH_RERANKING=true
-UPSTASH_INPUT_ENRICHMENT=true`,
-  algolia: `ALGOLIA_APPLICATION_ID=your-app-id
-ALGOLIA_API_KEY=your-api-key
-ALGOLIA_INDEX=your-index-name`,
+// JSON credential templates
+const CREDENTIAL_TEMPLATES = {
+  upstash_search: JSON.stringify(
+    {
+      url: "https://your-database.upstash.io",
+      token: "your-rest-token",
+      defaultNamespace: "optional-namespace",
+    },
+    null,
+    2
+  ),
+  algolia: JSON.stringify(
+    {
+      applicationId: "your-app-id",
+      apiKey: "your-api-key",
+      defaultIndex: "your-index-name",
+    },
+    null,
+    2
+  ),
 };
 
 export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   const isEditing = !!database;
   const { isAdmin } = useIsAdmin();
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -70,7 +81,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
       provider:
         (database?.provider as "upstash_search" | "algolia") ||
         "upstash_search",
-      credentials: database?.credentials || PROVIDER_TEMPLATES.upstash_search,
+      credentials: database?.credentials || CREDENTIAL_TEMPLATES.upstash_search,
       devOnly: database?.devOnly ?? true,
     },
   });
@@ -86,18 +97,28 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           "upstash_search",
         credentials:
           database.credentials ||
-          PROVIDER_TEMPLATES[
+          CREDENTIAL_TEMPLATES[
             database.provider as "upstash_search" | "algolia"
           ] ||
-          PROVIDER_TEMPLATES.upstash_search,
+          CREDENTIAL_TEMPLATES.upstash_search,
         devOnly: database.devOnly ?? true,
       });
     } else {
       reset();
     }
+    setJsonError(null);
   }, [database, open, reset]);
 
   const watchedProvider = watch("provider");
+  const watchedCredentials = watch("credentials");
+
+  // Validate JSON on change
+  useEffect(() => {
+    if (watchedCredentials) {
+      const error = validateCredentials(watchedProvider, watchedCredentials);
+      setJsonError(error);
+    }
+  }, [watchedCredentials, watchedProvider]);
 
   const utils = trpc.useUtils();
   const { mutateAsync: createDatabase, isPending: isCreating } =
@@ -111,7 +132,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           reset({
             label: "",
             provider: "upstash_search",
-            credentials: PROVIDER_TEMPLATES.upstash_search,
+            credentials: CREDENTIAL_TEMPLATES.upstash_search,
             devOnly: true,
           });
         }
@@ -126,10 +147,10 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
       },
     });
 
-  // Update credentials when provider changes (only for add mode)
+  // Update credentials template when provider changes (only for add mode)
   useEffect(() => {
     if (!isEditing) {
-      setValue("credentials", PROVIDER_TEMPLATES[watchedProvider]);
+      setValue("credentials", CREDENTIAL_TEMPLATES[watchedProvider]);
     }
   }, [watchedProvider, setValue, isEditing]);
 
@@ -143,16 +164,23 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           "upstash_search",
         credentials:
           database.credentials ||
-          PROVIDER_TEMPLATES[
+          CREDENTIAL_TEMPLATES[
             database.provider as "upstash_search" | "algolia"
           ] ||
-          PROVIDER_TEMPLATES.upstash_search,
+          CREDENTIAL_TEMPLATES.upstash_search,
         devOnly: database.devOnly ?? true,
       });
     }
   }, [database, reset]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+    // Validate JSON before submitting
+    const error = validateCredentials(data.provider, data.credentials);
+    if (error) {
+      setJsonError(error);
+      return;
+    }
+
     if (isEditing && database) {
       await updateDatabase({
         id: database.id,
@@ -232,22 +260,34 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           </div>
 
           <div className="min-w-0">
-            <Label htmlFor="credentials">Config</Label>
+            <Label htmlFor="credentials">Credentials (JSON)</Label>
             <p className="text-sm text-gray-600 mb-2">
-              Enter your config in environment variable format:
+              Enter your credentials in JSON format:
             </p>
-            <Textarea
-              id="credentials"
-              {...register("credentials", {
-                required: "Config is required",
-              })}
-              placeholder={PROVIDER_TEMPLATES[watchedProvider]}
-              className="h-32 font-mono text-sm whitespace-nowrap overflow-x-scroll"
-              aria-invalid={errors.credentials ? "true" : "false"}
+            <Controller
+              name="credentials"
+              control={control}
+              rules={{ required: "Credentials are required" }}
+              render={({ field }) => (
+                <ConfigEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  height="150px"
+                />
+              )}
             />
             {errors.credentials && (
               <p className="text-sm text-red-500 mt-1" role="alert">
                 {errors.credentials.message}
+              </p>
+            )}
+            {jsonError && (
+              <p
+                className="text-sm text-red-500 mt-1 flex items-center gap-1"
+                role="alert"
+              >
+                <AlertCircle className="h-3 w-3" />
+                {jsonError}
               </p>
             )}
           </div>
@@ -260,8 +300,8 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
                 render={({ field }) => (
                   <Checkbox
                     id="devOnly"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
+                    checked={!field.value}
+                    onCheckedChange={(checked) => field.onChange(!checked)}
                   />
                 )}
               />
@@ -269,7 +309,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
                 htmlFor="devOnly"
                 className="text-sm font-normal cursor-pointer"
               >
-                Dev Only (only visible in localhost when checked)
+                Public (will be visible to everyone)
               </Label>
             </div>
           )}
@@ -278,7 +318,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={!!jsonError}>
               {isLoading && <Loader2Icon className="animate-spin" />}
               {isEditing
                 ? isLoading

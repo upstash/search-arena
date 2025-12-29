@@ -1,6 +1,12 @@
 import { db, schema } from "../db";
 import { eq } from "drizzle-orm";
 import { createSearchProvider } from "../providers";
+import {
+  parseCredentials,
+} from "@/lib/schemas/credentials";
+import {
+  getDefaultConfig,
+} from "@/lib/schemas/search-config";
 
 export class DatabaseService {
   /**
@@ -17,10 +23,14 @@ export class DatabaseService {
       orderBy: (databases, { asc }) => [asc(databases.label)],
     });
 
-    // Filter out devOnly databases if user is not admin
-    const filteredResult = isAdmin
-      ? result
-      : result.filter((db) => !db.devOnly);
+    // Always filter out v0 databases, and for non-admins only show public databases
+    const filteredResult = result.filter((db) => {
+      // Always exclude v0 (legacy) databases
+      if (db.version === 0) return false;
+      // For non-admins, only show public databases (devOnly === false)
+      if (!isAdmin && db.devOnly) return false;
+      return true;
+    });
 
     return filteredResult.map((database) => ({
       ...database,
@@ -38,7 +48,7 @@ export class DatabaseService {
   }
 
   /**
-   * Create a new database
+   * Create a new database (v1 with JSON credentials)
    */
   async createDatabase(
     label: string,
@@ -46,13 +56,14 @@ export class DatabaseService {
     credentials: string,
     devOnly: boolean = true
   ) {
-    // Create the database record with credentials
+    // Create the database record with credentials and version=1
     const [database] = await db
       .insert(schema.databases)
       .values({
         label,
         provider,
         credentials,
+        version: 1, // New format
         devOnly,
       })
       .returning();
@@ -74,7 +85,10 @@ export class DatabaseService {
     // Update the database record
     const updateData: Partial<typeof schema.databases.$inferInsert> = {};
     if (data.label) updateData.label = data.label;
-    if (data.credentials) updateData.credentials = data.credentials;
+    if (data.credentials) {
+      updateData.credentials = data.credentials;
+      updateData.version = 1; // Upgrading to v1 format
+    }
     if (data.devOnly !== undefined) updateData.devOnly = data.devOnly;
 
     if (Object.keys(updateData).length > 0) {
@@ -111,6 +125,7 @@ export class DatabaseService {
         label: duplicatedLabel,
         provider: originalDatabase.provider,
         credentials: originalDatabase.credentials,
+        version: originalDatabase.version,
         devOnly: originalDatabase.devOnly,
       })
       .returning();
@@ -141,11 +156,21 @@ export class DatabaseService {
         throw new Error("Database or credentials not found");
       }
 
-      // Create the search provider
-      const provider = createSearchProvider(
-        database.provider,
-        database.credentials
-      );
+      // Only v1 databases can be tested
+      if (database.version !== 1) {
+        throw new Error("Cannot test v0 (legacy) database. Please update credentials to JSON format.");
+      }
+
+      // Parse credentials and use default config
+      const credentials = parseCredentials(database.provider, database.credentials);
+      const config = getDefaultConfig(database.provider);
+
+      // Create the search provider with new API
+      const provider = createSearchProvider({
+        provider: database.provider,
+        credentials,
+        config,
+      } as Parameters<typeof createSearchProvider>[0]);
 
       // Test with a simple query
       const results = await provider.search("test");

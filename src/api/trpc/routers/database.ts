@@ -1,10 +1,15 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
+import {
+  upstashCredentialsSchema,
+  algoliaCredentialsSchema,
+} from "@/lib/schemas/credentials";
 
 // Input validation schemas
 const createDatabaseSchema = z.object({
   label: z.string().min(1),
   provider: z.enum(["algolia", "upstash_search"]),
+  // Credentials as JSON string - validated based on provider
   credentials: z.string().min(1),
   devOnly: z.boolean().default(true),
 });
@@ -17,6 +22,26 @@ const updateDatabaseSchema = z.object({
   credentials: z.string().optional(),
   devOnly: z.boolean().optional(),
 });
+
+// Helper to validate credentials JSON based on provider
+function validateCredentials(
+  provider: "algolia" | "upstash_search",
+  credentialsJson: string
+): void {
+  try {
+    const parsed = JSON.parse(credentialsJson);
+    if (provider === "upstash_search") {
+      upstashCredentialsSchema.parse(parsed);
+    } else if (provider === "algolia") {
+      algoliaCredentialsSchema.parse(parsed);
+    }
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error("Invalid JSON format for credentials");
+    }
+    throw error;
+  }
+}
 
 // Database router
 export const databaseRouter = router({
@@ -35,10 +60,13 @@ export const databaseRouter = router({
       return ctx.databaseService.getDatabaseById(input.id);
     }),
 
-  // Create a new database
+  // Create a new database (v1 with JSON credentials)
   create: protectedProcedure
     .input(createDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
+      // Validate credentials JSON against Zod schema
+      validateCredentials(input.provider, input.credentials);
+
       return ctx.databaseService.createDatabase(
         input.label,
         input.provider,
@@ -51,6 +79,15 @@ export const databaseRouter = router({
   update: protectedProcedure
     .input(updateDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
+      // If credentials are provided, validate them
+      if (input.credentials) {
+        // Get the database to know its provider
+        const db = await ctx.databaseService.getDatabaseById(input.id);
+        if (db) {
+          validateCredentials(db.provider, input.credentials);
+        }
+      }
+
       return ctx.databaseService.updateDatabase(input.id, {
         label: input.label,
         credentials: input.credentials,

@@ -1,3 +1,12 @@
+import {
+  UpstashCredentials,
+  AlgoliaCredentials,
+} from "@/lib/schemas/credentials";
+import {
+  UpstashSearchConfig,
+  AlgoliaSearchConfig,
+} from "@/lib/schemas/search-config";
+
 // Common search result interface
 export interface SearchResult {
   id: string;
@@ -28,20 +37,21 @@ export interface SearchProvider {
   name: string;
 }
 
-// Algolia credentials
-export interface AlgoliaCredentials {
-  applicationId: string;
-  apiKey: string;
-  index: string;
-}
+// Provider parameters for creating search providers
+export type UpstashProviderParams = {
+  provider: "upstash_search";
+  credentials: UpstashCredentials;
+  config: UpstashSearchConfig;
+};
 
-// Upstash Search credentials
-export interface UpstashSearchCredentials {
-  url: string;
-  token: string;
-  index: string;
-  reranking: boolean;
-  inputEnrichment: boolean;
-  topk: number;
-  semanticWeight: number;
-}
+export type AlgoliaProviderParams = {
+  provider: "algolia";
+  credentials: AlgoliaCredentials;
+  config: AlgoliaSearchConfig;
+};
+
+export type ProviderParams = UpstashProviderParams | AlgoliaProviderParams;
+
+// Re-export credential and config types for convenience
+export type { UpstashCredentials, AlgoliaCredentials };
+export type { UpstashSearchConfig, AlgoliaSearchConfig };

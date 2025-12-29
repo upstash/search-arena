@@ -1,7 +1,22 @@
 import { db, schema } from "../db";
-import { createSearchProvider } from "../providers";
+import { createSearchProvider, ProviderParams } from "../providers";
 import { LLMService } from "./llm";
 import { and, eq, or } from "drizzle-orm";
+import { parseCredentials } from "@/lib/schemas/credentials";
+import {
+  UpstashSearchConfig,
+  AlgoliaSearchConfig,
+} from "@/lib/schemas/search-config";
+
+type CreateBattleParams = {
+  label: string;
+  databaseId1: string;
+  databaseId2: string;
+  config1: UpstashSearchConfig | AlgoliaSearchConfig;
+  config2: UpstashSearchConfig | AlgoliaSearchConfig;
+  queries: string;
+  sessionId?: string;
+};
 
 export class BattleService {
   private llmService: LLMService;
@@ -13,20 +28,26 @@ export class BattleService {
   /**
    * Creates a new battle between two databases
    */
-  async createBattle(
-    label: string,
-    databaseId1: string,
-    databaseId2: string,
-    queries: string,
-    sessionId?: string
-  ) {
-    // Create the battle record
+  async createBattle(params: CreateBattleParams) {
+    const {
+      label,
+      databaseId1,
+      databaseId2,
+      config1,
+      config2,
+      queries,
+      sessionId,
+    } = params;
+
+    // Create the battle record with configs
     const [battle] = await db
       .insert(schema.battles)
       .values({
         label,
         databaseId1,
         databaseId2,
+        config1: JSON.stringify(config1),
+        config2: JSON.stringify(config2),
         status: "pending",
         queries,
         sessionId,
@@ -98,16 +119,46 @@ export class BattleService {
         throw new Error("Database credentials not found");
       }
 
-      // Create search providers
-      const provider1 = createSearchProvider(
+      // Check if databases are v1 format
+      if (battle.database1.version !== 1 || battle.database2.version !== 1) {
+        throw new Error("Cannot process battle with v0 (legacy) databases. Please update database credentials to JSON format.");
+      }
+
+      // Check if configs are present
+      if (!battle.config1 || !battle.config2) {
+        throw new Error("Battle configs not found");
+      }
+
+      // Parse credentials
+      const credentials1 = parseCredentials(
         battle.database1.provider,
         battle.database1.credentials
       );
-
-      const provider2 = createSearchProvider(
+      const credentials2 = parseCredentials(
         battle.database2.provider,
         battle.database2.credentials
       );
+
+      // Parse configs
+      const config1 = JSON.parse(battle.config1) as
+        | UpstashSearchConfig
+        | AlgoliaSearchConfig;
+      const config2 = JSON.parse(battle.config2) as
+        | UpstashSearchConfig
+        | AlgoliaSearchConfig;
+
+      // Create search providers with new keyed API
+      const provider1 = createSearchProvider({
+        provider: battle.database1.provider,
+        credentials: credentials1,
+        config: config1,
+      } as ProviderParams);
+
+      const provider2 = createSearchProvider({
+        provider: battle.database2.provider,
+        credentials: credentials2,
+        config: config2,
+      } as ProviderParams);
 
       // Process each query
       let totalScoreDb1 = 0;

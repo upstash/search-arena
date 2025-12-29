@@ -6,12 +6,25 @@ import {
   router,
 } from "../trpc";
 import { after } from "next/server";
+import {
+  upstashSearchConfigSchema,
+  algoliaSearchConfigSchema,
+} from "@/lib/schemas/search-config";
+
+// Search config schema - union of both provider configs
+const searchConfigSchema = z.union([
+  upstashSearchConfigSchema,
+  algoliaSearchConfigSchema,
+]);
 
 // Input validation schemas
 const createBattleSchema = z.object({
   label: z.string().min(1),
   databaseId1: z.uuid(),
   databaseId2: z.uuid(),
+  // Configs are required but can have optional fields inside
+  config1: searchConfigSchema,
+  config2: searchConfigSchema,
   queries: z.string().min(1),
 });
 
@@ -40,13 +53,15 @@ export const battleRouter = router({
   create: ratelimitProcedure("scan", 4)
     .input(createBattleSchema)
     .mutation(async ({ ctx, input }) => {
-      const { battle, sideEffect } = await ctx.battleService.createBattle(
-        input.label,
-        input.databaseId1,
-        input.databaseId2,
-        input.queries,
-        ctx.sessionId
-      );
+      const { battle, sideEffect } = await ctx.battleService.createBattle({
+        label: input.label,
+        databaseId1: input.databaseId1,
+        databaseId2: input.databaseId2,
+        config1: input.config1,
+        config2: input.config2,
+        queries: input.queries,
+        sessionId: ctx.sessionId,
+      });
 
       after(async () => {
         await sideEffect();

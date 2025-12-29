@@ -11,6 +11,7 @@ import {
   jsonb,
   unique,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 
 // Provider types enum
@@ -31,8 +32,10 @@ export const databases = pgTable("databases", {
   id: uuid("id").primaryKey().defaultRandom(),
   label: varchar("label", { length: 255 }).notNull(),
   provider: providerEnum("provider").notNull(),
-  // Credentials stored as environment file format
+  // Credentials stored as JSON string
   credentials: text("credentials").notNull(),
+  // Version 0 = legacy ENV format, Version 1 = new JSON format
+  version: integer("version").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   devOnly: boolean("dev_only").default(true).notNull(),
@@ -50,6 +53,9 @@ export const battles = pgTable(
     databaseId2: uuid("database_id_2")
       .notNull()
       .references(() => databases.id, { onDelete: "cascade" }),
+    // Search configs as JSON strings (one per database)
+    config1: text("config1"),
+    config2: text("config2"),
     queries: text("queries").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     completedAt: timestamp("completed_at"),

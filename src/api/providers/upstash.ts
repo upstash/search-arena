@@ -1,33 +1,36 @@
 import {
   SearchProvider,
   SearchResponse,
-  UpstashSearchCredentials,
+  UpstashCredentials,
+  UpstashSearchConfig,
 } from "./types";
 
 export class UpstashSearchProvider implements SearchProvider {
-  private credentials: UpstashSearchCredentials;
+  private credentials: UpstashCredentials;
+  private config: UpstashSearchConfig;
   name = "upstash_search";
 
-  constructor(credentials: UpstashSearchCredentials) {
+  constructor(credentials: UpstashCredentials, config: UpstashSearchConfig) {
     this.credentials = credentials;
+    this.config = config;
   }
 
   async search(query: string): Promise<SearchResponse> {
     try {
-      // Construct the search URL
-      const searchUrl = `${this.credentials.url}/search/${this.credentials.index}`;
+      // Use namespace from config, or fall back to defaultNamespace from credentials
+      const namespace = this.config.namespace ?? this.credentials.defaultNamespace ?? "";
+      
+      // Construct the search URL with namespace
+      const searchUrl = `${this.credentials.url}/search/${namespace}`;
 
-      // Use the configured semantic weight value
-      const semanticWeight = this.credentials.semanticWeight;
-
-      // Prepare the request body
+      // Prepare the request body using config values
       const requestBody = {
         query,
-        topK: this.credentials.topk,
+        topK: this.config.topK,
         includeMetadata: true,
-        reranking: this.credentials.reranking,
-        inputEnrichment: this.credentials.inputEnrichment,
-        semanticWeight,
+        reranking: this.config.reranking,
+        inputEnrichment: this.config.inputEnrichment,
+        semanticWeight: this.config.semanticWeight,
         _returnEnrichedInput: true,
         _appendOriginalInputToEnrichmentResult: true,
       };
@@ -87,10 +90,11 @@ export class UpstashSearchProvider implements SearchProvider {
         metadata: {
           enrichedInput: decodedEnrichedInput,
           totalResults: upstashResults.length,
-          topk: this.credentials.topk,
-          reranking: this.credentials.reranking,
-          inputEnrichment: this.credentials.inputEnrichment,
-          semanticWeight: semanticWeight,
+          topK: this.config.topK,
+          reranking: this.config.reranking,
+          inputEnrichment: this.config.inputEnrichment,
+          semanticWeight: this.config.semanticWeight,
+          namespace,
         },
       };
     } catch (error) {

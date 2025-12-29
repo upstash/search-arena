@@ -1,13 +1,20 @@
-import { AlgoliaCredentials, SearchProvider, SearchResponse } from "./types";
+import {
+  AlgoliaCredentials,
+  AlgoliaSearchConfig,
+  SearchProvider,
+  SearchResponse,
+} from "./types";
 import { algoliasearch } from "algoliasearch";
 import { createFetchRequester } from "@algolia/requester-fetch";
 
 export class AlgoliaSearchProvider implements SearchProvider {
   private credentials: AlgoliaCredentials;
+  private config: AlgoliaSearchConfig;
   name = "algolia";
 
-  constructor(credentials: AlgoliaCredentials) {
+  constructor(credentials: AlgoliaCredentials, config: AlgoliaSearchConfig) {
     this.credentials = credentials;
+    this.config = config;
   }
 
   async search(query: string): Promise<SearchResponse> {
@@ -20,6 +27,9 @@ export class AlgoliaSearchProvider implements SearchProvider {
           requester: createFetchRequester(),
         }
       );
+
+      // Use index from config, or fall back to defaultIndex from credentials
+      const indexName = this.config.index ?? this.credentials.defaultIndex;
 
       // Define the type for search hits
       interface AlgoliaHit {
@@ -35,9 +45,9 @@ export class AlgoliaSearchProvider implements SearchProvider {
       const { results: searchResults } = await client.search({
         requests: [
           {
-            indexName: this.credentials.index,
+            indexName,
             query,
-            hitsPerPage: 10,
+            hitsPerPage: this.config.hitsPerPage,
           },
         ],
       });
@@ -70,6 +80,8 @@ export class AlgoliaSearchProvider implements SearchProvider {
         metadata: {
           totalResults: hits.length,
           processingTime: firstResult?.processingTimeMS,
+          hitsPerPage: this.config.hitsPerPage,
+          index: indexName,
         },
       };
     } catch (error) {
