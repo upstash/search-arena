@@ -43,7 +43,7 @@ interface DatabaseModalProps {
 // Form data type
 type FormData = {
   label: string;
-  provider: string;
+  provider: Provider;
   credentials: string;
   devOnly: boolean;
 };

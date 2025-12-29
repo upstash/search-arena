@@ -201,6 +201,7 @@ export class BattleService {
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId1,
+            configIndex: 1,
             results: search1.searchResponse.results,
             score: String(db1.score), // Convert to string for Drizzle compatibility
             llmFeedback: db1.feedback,
@@ -215,6 +216,7 @@ export class BattleService {
           .values({
             battleQueryId: query.id,
             databaseId: battle.databaseId2,
+            configIndex: 2,
             results: search2.searchResponse.results,
             score: String(db2.score), // Convert to string for Drizzle compatibility
             llmFeedback: db2.feedback,
@@ -233,6 +235,7 @@ export class BattleService {
           try {
             return await searchQuery(query);
           } catch (error) {
+            console.error(`Error processing query ${query.queryText}`, error);
             // Update the query with error
             await db
               .update(schema.battleQueries)
@@ -516,12 +519,12 @@ export class BattleService {
     });
 
     return queries.map((query) => {
-      // With our improved relations, we no longer need type assertions
+      // Use configIndex to differentiate results (supports self-battles with different configs)
       const db1Result = query.results.find(
-        (r) => r.databaseId === battle.databaseId1
+        (r) => r.configIndex === 1
       );
       const db2Result = query.results.find(
-        (r) => r.databaseId === battle.databaseId2
+        (r) => r.configIndex === 2
       );
 
       return {

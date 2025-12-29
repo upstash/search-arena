@@ -23,7 +23,7 @@ export function QueryDetails({
 
   return (
     <motion.div
-      className="flex-grow overflow-y-auto border rounded bg-white"
+      className="grow overflow-y-auto border rounded bg-white"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: 0.2 }}
@@ -214,7 +214,7 @@ const QueryDetailCard = ({
         }}
         transition={{ delay: index * 0.02 }}
         className={cn(
-          "text-gray-600 mb-1 break-words",
+          "text-gray-600 mb-1 wrap-break-word",
           expanded ? "line-clamp-none" : "line-clamp-3"
         )}
       >
@@ -238,7 +238,7 @@ const SearchMetadataDisplay = ({ metadata }: { metadata: SearchMetadata }) => {
     <div className="mb-2 text-xs w-full">
       <div className="font-medium text-gray-700 mb-1">Search Metadata:</div>
       {filteredMetadata.map(([key, value]) => (
-        <div key={key} className="text-gray-600 text-wrap break-words">
+        <div key={key} className="text-gray-600 text-wrap wrap-break-word">
           <span className="font-semibold">{key}:</span>{" "}
           {typeof value === "string"
             ? value.replaceAll("+", " ")

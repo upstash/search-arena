@@ -12,7 +12,7 @@ const credentialsSchema = z.union([
 const createDatabaseSchema = z.object({
   label: z.string().min(1),
   // Provider is a string, validated against PROVIDER_KEYS
-  provider: z.string().min(1).refine(isValidProvider, {
+  provider: z.enum(PROVIDER_KEYS).refine(isValidProvider, {
     message: `Provider must be one of: ${PROVIDER_KEYS.join(", ")}`,
   }),
   // Credentials as JSON object, validated with provider schemas
@@ -20,10 +20,8 @@ const createDatabaseSchema = z.object({
   devOnly: z.boolean().default(true),
 });
 
-export type CreateDatabaseInput = z.infer<typeof createDatabaseSchema>;
-
 const updateDatabaseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   label: z.string().min(1).optional(),
   // Credentials as JSON object - validated with provider schemas if provided
   credentials: credentialsSchema.optional(),
@@ -74,21 +72,21 @@ export const databaseRouter = router({
 
   // Duplicate a database
   duplicate: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.duplicateDatabase(input.id);
     }),
 
   // Delete a database
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.deleteDatabase(input.id);
     }),
 
   // Test database connection
   testConnection: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.databaseService.testDatabaseConnection(input.id);
     }),

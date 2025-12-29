@@ -56,7 +56,7 @@ export const PROVIDERS = {
 export type Provider = keyof typeof PROVIDERS;
 
 /** Array of all provider keys */
-export const PROVIDER_KEYS = Object.keys(PROVIDERS) as Provider[];
+export const PROVIDER_KEYS = Object.keys(PROVIDERS) as [keyof typeof PROVIDERS];
 
 /** Default provider to use when none is specified */
 export const DEFAULT_PROVIDER: Provider = "upstash_search";

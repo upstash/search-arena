@@ -1,3 +1,4 @@
+import { PROVIDER_KEYS } from "@/lib/providers";
 import { relations } from "drizzle-orm";
 import {
   pgTable,
@@ -21,12 +22,14 @@ export const battleStatusEnum = pgEnum("battle_status", [
   "failed",
 ]);
 
+export const providerEnum = pgEnum("provider_type", PROVIDER_KEYS);
+
 // Database table
 export const databases = pgTable("databases", {
   id: uuid("id").primaryKey().defaultRandom(),
   label: varchar("label", { length: 255 }).notNull(),
   // Provider is a string, validated at application level via PROVIDERS registry
-  provider: varchar("provider", { length: 50 }).notNull(),
+  provider: providerEnum("provider").notNull(),
   // Credentials stored as JSON string
   credentials: text("credentials").notNull(),
   // Version 0 = legacy ENV format, Version 1 = new JSON format
@@ -82,7 +85,9 @@ export const battleQueries = pgTable("battle_queries", {
   error: text("error"),
 });
 
-// Search results table
+// The results from a single query, for ex: mafia movies ->
+// [result1, result2, result3] with dbid: 1
+// [result4, result5, result6] with dbid: 2
 export const searchResults = pgTable(
   "search_results",
   {
@@ -93,6 +98,8 @@ export const searchResults = pgTable(
     databaseId: uuid("database_id")
       .notNull()
       .references(() => databases.id, { onDelete: "cascade" }),
+    // Config index (1 or 2) to differentiate results when same database is used with different configs
+    configIndex: integer("config_index").notNull().default(1),
     results: jsonb("results").notNull(),
     score: decimal("score", { precision: 4, scale: 2 }),
     llmFeedback: text("llm_feedback"),
@@ -105,7 +112,8 @@ export const searchResults = pgTable(
   },
   (table) => {
     return {
-      unq: unique().on(table.battleQueryId, table.databaseId),
+      // Include configIndex in unique constraint to allow same database with different configs
+      unq: unique().on(table.battleQueryId, table.databaseId, table.configIndex),
     };
   }
 );

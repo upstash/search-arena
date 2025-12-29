@@ -22,7 +22,7 @@ import { ProviderBadge } from "./provider-badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfigEditor } from "./config-editor";
 import { trpc } from "@/api/trpc/client";
-import { AlertCircle, Loader2Icon } from "lucide-react";
+import { AlertCircle, Info, Loader2Icon } from "lucide-react";
 import {
   getDefaultConfig,
   validateSearchConfig,
@@ -248,28 +248,37 @@ export function BattleSetupModal({
               <Label htmlFor="databaseId1" className="mb-1">
                 Database 1
               </Label>
-              <Controller
-                name="databaseId1"
-                control={control}
-                rules={{ required: "Database 1 is required" }}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select database..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {v1Databases.map((db) => (
-                        <SelectItem key={db.id} value={db.id}>
-                          <div className="flex items-center gap-2">
-                            <span>{db.label}</span>
-                            <ProviderBadge provider={db.provider} />
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              {v1Databases.length === 0 ? (
+                <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground bg-muted/50 rounded-md border border-dashed">
+                  <Info className="h-4 w-4 flex-shrink-0" />
+                  <span>
+                    No databases available. Please add a database first.
+                  </span>
+                </div>
+              ) : (
+                <Controller
+                  name="databaseId1"
+                  control={control}
+                  rules={{ required: "Database 1 is required" }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select database..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {v1Databases.map((db) => (
+                          <SelectItem key={db.id} value={db.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{db.label}</span>
+                              <ProviderBadge provider={db.provider} />
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
               {errors.databaseId1 && (
                 <p className="text-sm text-red-500 mt-1" role="alert">
                   {errors.databaseId1.message}
@@ -307,28 +316,37 @@ export function BattleSetupModal({
               <Label htmlFor="databaseId2" className="mb-1">
                 Database 2
               </Label>
-              <Controller
-                name="databaseId2"
-                control={control}
-                rules={{ required: "Database 2 is required" }}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select database..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {v1Databases.map((db) => (
-                        <SelectItem key={db.id} value={db.id}>
-                          <div className="flex items-center gap-2">
-                            <span>{db.label}</span>
-                            <ProviderBadge provider={db.provider} />
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              {v1Databases.length === 0 ? (
+                <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground bg-muted/50 rounded-md border border-dashed">
+                  <Info className="h-4 w-4 flex-shrink-0" />
+                  <span>
+                    No databases available. Please add a database first.
+                  </span>
+                </div>
+              ) : (
+                <Controller
+                  name="databaseId2"
+                  control={control}
+                  rules={{ required: "Database 2 is required" }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select database..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {v1Databases.map((db) => (
+                          <SelectItem key={db.id} value={db.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{db.label}</span>
+                              <ProviderBadge provider={db.provider} />
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
               {errors.databaseId2 && (
                 <p className="text-sm text-red-500 mt-1" role="alert">
                   {errors.databaseId2.message}
