@@ -6,7 +6,7 @@ import { TRPCProvider } from "./providers";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Wrapper } from "./wrapper";
 import { Toaster } from "@/components/ui/sonner";
-import { unstable_ViewTransition as ViewTransition } from "react";
+import { ViewTransition } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

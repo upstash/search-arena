@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { unstable_ViewTransition as ViewTransition } from "react";
+import { ViewTransition } from "react";
 
 export const Wrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
