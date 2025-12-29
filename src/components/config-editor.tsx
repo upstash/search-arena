@@ -1,7 +1,7 @@
 "use client";
 
-import Editor, { OnMount } from "@monaco-editor/react";
-import { useRef, useCallback } from "react";
+import Editor from "@monaco-editor/react";
+import { useCallback } from "react";
 // import type { editor } from "monaco-editor";
 
 interface ConfigEditorProps {

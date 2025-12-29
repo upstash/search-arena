@@ -3,10 +3,9 @@ import { eq } from "drizzle-orm";
 import { createSearchProvider } from "../providers";
 import {
   parseCredentials,
-} from "@/lib/schemas/credentials";
-import {
   getDefaultConfig,
-} from "@/lib/schemas/search-config";
+  isValidProvider,
+} from "@/lib/providers";
 
 export class DatabaseService {
   /**
@@ -52,10 +51,15 @@ export class DatabaseService {
    */
   async createDatabase(
     label: string,
-    provider: "algolia" | "upstash_search",
+    provider: string,
     credentials: string,
     devOnly: boolean = true
   ) {
+    // Validate provider
+    if (!isValidProvider(provider)) {
+      throw new Error(`Unknown provider: ${provider}`);
+    }
+
     // Create the database record with credentials and version=1
     const [database] = await db
       .insert(schema.databases)

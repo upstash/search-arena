@@ -1,9 +1,10 @@
-import {
-  SearchProvider,
-  SearchResponse,
-  UpstashCredentials,
-  UpstashSearchConfig,
-} from "./types";
+import { z } from "zod";
+import { PROVIDERS } from "@/lib/providers";
+import { SearchProvider, SearchResponse } from "./types";
+
+// Types derived from PROVIDERS registry - kept private to this file
+type UpstashCredentials = z.infer<typeof PROVIDERS.upstash_search.credentialsSchema>;
+type UpstashSearchConfig = z.infer<typeof PROVIDERS.upstash_search.searchConfigSchema>;
 
 export class UpstashSearchProvider implements SearchProvider {
   private credentials: UpstashCredentials;
@@ -19,7 +20,7 @@ export class UpstashSearchProvider implements SearchProvider {
     try {
       // Use namespace from config, or fall back to defaultNamespace from credentials
       const namespace = this.config.namespace ?? this.credentials.defaultNamespace ?? "";
-      
+
       // Construct the search URL with namespace
       const searchUrl = `${this.credentials.url}/search/${namespace}`;
 

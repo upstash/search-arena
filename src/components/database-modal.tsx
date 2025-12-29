@@ -25,7 +25,14 @@ import { Database } from "@/api/trpc/types";
 import { Loader2Icon, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { validateCredentials } from "@/lib/schemas/validation";
+import {
+  validateCredentials,
+  PROVIDERS,
+  Provider,
+  PROVIDER_KEYS,
+  DEFAULT_PROVIDER,
+  isValidProvider,
+} from "@/lib/providers";
 
 interface DatabaseModalProps {
   open: boolean;
@@ -36,13 +43,13 @@ interface DatabaseModalProps {
 // Form data type
 type FormData = {
   label: string;
-  provider: "upstash_search" | "algolia";
+  provider: string;
   credentials: string;
   devOnly: boolean;
 };
 
-// JSON credential templates
-const CREDENTIAL_TEMPLATES = {
+// Generate credential templates from PROVIDERS registry
+const CREDENTIAL_TEMPLATES: Record<Provider, string> = {
   upstash_search: JSON.stringify(
     {
       url: "https://your-database.upstash.io",
@@ -63,6 +70,13 @@ const CREDENTIAL_TEMPLATES = {
   ),
 };
 
+function getCredentialTemplate(provider: string): string {
+  if (isValidProvider(provider)) {
+    return CREDENTIAL_TEMPLATES[provider];
+  }
+  return "{}";
+}
+
 export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   const isEditing = !!database;
   const { isAdmin } = useIsAdmin();
@@ -78,10 +92,10 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   } = useForm<FormData>({
     defaultValues: {
       label: database?.label || "",
-      provider:
-        (database?.provider as "upstash_search" | "algolia") ||
-        "upstash_search",
-      credentials: database?.credentials || CREDENTIAL_TEMPLATES.upstash_search,
+      provider: database?.provider || DEFAULT_PROVIDER,
+      credentials:
+        database?.credentials ||
+        getCredentialTemplate(database?.provider || DEFAULT_PROVIDER),
       devOnly: database?.devOnly ?? true,
     },
   });
@@ -92,15 +106,9 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
     if (database) {
       reset({
         label: database.label || "",
-        provider:
-          (database.provider as "upstash_search" | "algolia") ||
-          "upstash_search",
+        provider: database.provider || DEFAULT_PROVIDER,
         credentials:
-          database.credentials ||
-          CREDENTIAL_TEMPLATES[
-            database.provider as "upstash_search" | "algolia"
-          ] ||
-          CREDENTIAL_TEMPLATES.upstash_search,
+          database.credentials || getCredentialTemplate(database.provider),
         devOnly: database.devOnly ?? true,
       });
     } else {
@@ -131,8 +139,8 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
         if (!isEditing) {
           reset({
             label: "",
-            provider: "upstash_search",
-            credentials: CREDENTIAL_TEMPLATES.upstash_search,
+            provider: DEFAULT_PROVIDER,
+            credentials: getCredentialTemplate(DEFAULT_PROVIDER),
             devOnly: true,
           });
         }
@@ -150,7 +158,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   // Update credentials template when provider changes (only for add mode)
   useEffect(() => {
     if (!isEditing) {
-      setValue("credentials", CREDENTIAL_TEMPLATES[watchedProvider]);
+      setValue("credentials", getCredentialTemplate(watchedProvider));
     }
   }, [watchedProvider, setValue, isEditing]);
 
@@ -159,15 +167,9 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
     if (database) {
       reset({
         label: database.label || "",
-        provider:
-          (database.provider as "upstash_search" | "algolia") ||
-          "upstash_search",
+        provider: database.provider || DEFAULT_PROVIDER,
         credentials:
-          database.credentials ||
-          CREDENTIAL_TEMPLATES[
-            database.provider as "upstash_search" | "algolia"
-          ] ||
-          CREDENTIAL_TEMPLATES.upstash_search,
+          database.credentials || getCredentialTemplate(database.provider),
         devOnly: database.devOnly ?? true,
       });
     }
@@ -185,14 +187,14 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
       await updateDatabase({
         id: database.id,
         label: data.label,
-        credentials: data.credentials,
+        credentials: JSON.parse(data.credentials),
         devOnly: data.devOnly,
       });
     } else {
       await createDatabase({
         label: data.label,
         provider: data.provider,
-        credentials: data.credentials,
+        credentials: JSON.parse(data.credentials),
         devOnly: data.devOnly,
       });
     }
@@ -244,10 +246,11 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="upstash_search">
-                      Upstash Search
-                    </SelectItem>
-                    <SelectItem value="algolia">Algolia</SelectItem>
+                    {PROVIDER_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {PROVIDERS[key].name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               )}

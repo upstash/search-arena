@@ -14,12 +14,6 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 
-// Provider types enum
-export const providerEnum = pgEnum("provider_type", [
-  "algolia",
-  "upstash_search",
-]);
-
 export const battleStatusEnum = pgEnum("battle_status", [
   "pending",
   "in_progress",
@@ -31,7 +25,8 @@ export const battleStatusEnum = pgEnum("battle_status", [
 export const databases = pgTable("databases", {
   id: uuid("id").primaryKey().defaultRandom(),
   label: varchar("label", { length: 255 }).notNull(),
-  provider: providerEnum("provider").notNull(),
+  // Provider is a string, validated at application level via PROVIDERS registry
+  provider: varchar("provider", { length: 50 }).notNull(),
   // Credentials stored as JSON string
   credentials: text("credentials").notNull(),
   // Version 0 = legacy ENV format, Version 1 = new JSON format

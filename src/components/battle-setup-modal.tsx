@@ -24,10 +24,10 @@ import { ConfigEditor } from "./config-editor";
 import { trpc } from "@/api/trpc/client";
 import { AlertCircle, Loader2Icon } from "lucide-react";
 import {
-  DEFAULT_UPSTASH_CONFIG,
-  DEFAULT_ALGOLIA_CONFIG,
-} from "@/lib/schemas/search-config";
-import { validateSearchConfig } from "@/lib/schemas/validation";
+  getDefaultConfig,
+  validateSearchConfig,
+  isValidProvider,
+} from "@/lib/providers";
 
 interface BattleSetupModalProps {
   open: boolean;
@@ -51,15 +51,11 @@ type FormData = {
 };
 
 // Get default config as JSON string for a provider
-function getDefaultConfigJson(
-  provider: "upstash_search" | "algolia" | undefined
-): string {
-  if (provider === "upstash_search") {
-    return JSON.stringify(DEFAULT_UPSTASH_CONFIG, null, 2);
-  } else if (provider === "algolia") {
-    return JSON.stringify(DEFAULT_ALGOLIA_CONFIG, null, 2);
+function getDefaultConfigJson(provider: string | undefined): string {
+  if (!provider || !isValidProvider(provider)) {
+    return "{}";
   }
-  return "{}";
+  return JSON.stringify(getDefaultConfig(provider), null, 2);
 }
 
 export function BattleSetupModal({

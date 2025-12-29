@@ -1,8 +1,8 @@
-import { Provider, PROVIDERS } from "@/lib/providers";
+import { PROVIDERS, isValidProvider } from "@/lib/providers";
 import { Badge } from "./ui/badge";
 
-export const ProviderBadge = ({ provider }: { provider?: Provider }) => {
-  if (!provider) {
+export const ProviderBadge = ({ provider }: { provider?: string }) => {
+  if (!provider || !isValidProvider(provider)) {
     return null;
   }
 

@@ -1,16 +1,22 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
-import {
-  upstashCredentialsSchema,
-  algoliaCredentialsSchema,
-} from "@/lib/schemas/credentials";
+import { PROVIDERS, PROVIDER_KEYS, isValidProvider } from "@/lib/providers";
+
+// Credentials schema - union of all provider credentials from PROVIDERS registry
+const credentialsSchema = z.union([
+  PROVIDERS.upstash_search.credentialsSchema,
+  PROVIDERS.algolia.credentialsSchema,
+]);
 
 // Input validation schemas
 const createDatabaseSchema = z.object({
   label: z.string().min(1),
-  provider: z.enum(["algolia", "upstash_search"]),
-  // Credentials as JSON string - validated based on provider
-  credentials: z.string().min(1),
+  // Provider is a string, validated against PROVIDER_KEYS
+  provider: z.string().min(1).refine(isValidProvider, {
+    message: `Provider must be one of: ${PROVIDER_KEYS.join(", ")}`,
+  }),
+  // Credentials as JSON object, validated with provider schemas
+  credentials: credentialsSchema,
   devOnly: z.boolean().default(true),
 });
 
@@ -19,29 +25,10 @@ export type CreateDatabaseInput = z.infer<typeof createDatabaseSchema>;
 const updateDatabaseSchema = z.object({
   id: z.string().uuid(),
   label: z.string().min(1).optional(),
-  credentials: z.string().optional(),
+  // Credentials as JSON object - validated with provider schemas if provided
+  credentials: credentialsSchema.optional(),
   devOnly: z.boolean().optional(),
 });
-
-// Helper to validate credentials JSON based on provider
-function validateCredentials(
-  provider: "algolia" | "upstash_search",
-  credentialsJson: string
-): void {
-  try {
-    const parsed = JSON.parse(credentialsJson);
-    if (provider === "upstash_search") {
-      upstashCredentialsSchema.parse(parsed);
-    } else if (provider === "algolia") {
-      algoliaCredentialsSchema.parse(parsed);
-    }
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error("Invalid JSON format for credentials");
-    }
-    throw error;
-  }
-}
 
 // Database router
 export const databaseRouter = router({
@@ -64,13 +51,11 @@ export const databaseRouter = router({
   create: protectedProcedure
     .input(createDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
-      // Validate credentials JSON against Zod schema
-      validateCredentials(input.provider, input.credentials);
-
       return ctx.databaseService.createDatabase(
         input.label,
         input.provider,
-        input.credentials,
+        // Stringify for storage since service expects JSON string
+        JSON.stringify(input.credentials),
         input.devOnly
       );
     }),
@@ -79,18 +64,10 @@ export const databaseRouter = router({
   update: protectedProcedure
     .input(updateDatabaseSchema)
     .mutation(async ({ ctx, input }) => {
-      // If credentials are provided, validate them
-      if (input.credentials) {
-        // Get the database to know its provider
-        const db = await ctx.databaseService.getDatabaseById(input.id);
-        if (db) {
-          validateCredentials(db.provider, input.credentials);
-        }
-      }
-
       return ctx.databaseService.updateDatabase(input.id, {
         label: input.label,
-        credentials: input.credentials,
+        // Stringify for storage since service expects JSON string
+        credentials: input.credentials ? JSON.stringify(input.credentials) : undefined,
         devOnly: input.devOnly,
       });
     }),

@@ -6,15 +6,12 @@ import {
   router,
 } from "../trpc";
 import { after } from "next/server";
-import {
-  upstashSearchConfigSchema,
-  algoliaSearchConfigSchema,
-} from "@/lib/schemas/search-config";
+import { PROVIDERS } from "@/lib/providers";
 
-// Search config schema - union of both provider configs
+// Search config schema - union of all provider configs from PROVIDERS registry
 const searchConfigSchema = z.union([
-  upstashSearchConfigSchema,
-  algoliaSearchConfigSchema,
+  PROVIDERS.upstash_search.searchConfigSchema,
+  PROVIDERS.algolia.searchConfigSchema,
 ]);
 
 // Input validation schemas
@@ -22,7 +19,7 @@ const createBattleSchema = z.object({
   label: z.string().min(1),
   databaseId1: z.uuid(),
   databaseId2: z.uuid(),
-  // Configs are required but can have optional fields inside
+  // Configs as JSON objects, validated with provider schemas
   config1: searchConfigSchema,
   config2: searchConfigSchema,
   queries: z.string().min(1),
@@ -57,8 +54,9 @@ export const battleRouter = router({
         label: input.label,
         databaseId1: input.databaseId1,
         databaseId2: input.databaseId2,
-        config1: input.config1,
-        config2: input.config2,
+        // Stringify for storage since service expects JSON strings
+        config1: JSON.stringify(input.config1),
+        config2: JSON.stringify(input.config2),
         queries: input.queries,
         sessionId: ctx.sessionId,
       });

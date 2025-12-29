@@ -1,19 +1,15 @@
 import { db, schema } from "../db";
-import { createSearchProvider, ProviderParams } from "../providers";
+import { createSearchProvider } from "../providers";
 import { LLMService } from "./llm";
 import { and, eq, or } from "drizzle-orm";
-import { parseCredentials } from "@/lib/schemas/credentials";
-import {
-  UpstashSearchConfig,
-  AlgoliaSearchConfig,
-} from "@/lib/schemas/search-config";
+import { parseCredentials, parseSearchConfig } from "@/lib/providers";
 
 type CreateBattleParams = {
   label: string;
   databaseId1: string;
   databaseId2: string;
-  config1: UpstashSearchConfig | AlgoliaSearchConfig;
-  config2: UpstashSearchConfig | AlgoliaSearchConfig;
+  config1: string; // JSON string
+  config2: string; // JSON string
   queries: string;
   sessionId?: string;
 };
@@ -39,15 +35,15 @@ export class BattleService {
       sessionId,
     } = params;
 
-    // Create the battle record with configs
+    // Create the battle record with configs (already JSON strings)
     const [battle] = await db
       .insert(schema.battles)
       .values({
         label,
         databaseId1,
         databaseId2,
-        config1: JSON.stringify(config1),
-        config2: JSON.stringify(config2),
+        config1,
+        config2,
         status: "pending",
         queries,
         sessionId,
@@ -140,25 +136,21 @@ export class BattleService {
       );
 
       // Parse configs
-      const config1 = JSON.parse(battle.config1) as
-        | UpstashSearchConfig
-        | AlgoliaSearchConfig;
-      const config2 = JSON.parse(battle.config2) as
-        | UpstashSearchConfig
-        | AlgoliaSearchConfig;
+      const config1 = parseSearchConfig(battle.database1.provider, battle.config1);
+      const config2 = parseSearchConfig(battle.database2.provider, battle.config2);
 
-      // Create search providers with new keyed API
+      // Create search providers
       const provider1 = createSearchProvider({
         provider: battle.database1.provider,
         credentials: credentials1,
         config: config1,
-      } as ProviderParams);
+      });
 
       const provider2 = createSearchProvider({
         provider: battle.database2.provider,
         credentials: credentials2,
         config: config2,
-      } as ProviderParams);
+      });
 
       // Process each query
       let totalScoreDb1 = 0;

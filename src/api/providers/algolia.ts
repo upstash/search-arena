@@ -1,11 +1,12 @@
-import {
-  AlgoliaCredentials,
-  AlgoliaSearchConfig,
-  SearchProvider,
-  SearchResponse,
-} from "./types";
+import { z } from "zod";
+import { PROVIDERS } from "@/lib/providers";
+import { SearchProvider, SearchResponse } from "./types";
 import { algoliasearch } from "algoliasearch";
 import { createFetchRequester } from "@algolia/requester-fetch";
+
+// Types derived from PROVIDERS registry - kept private to this file
+type AlgoliaCredentials = z.infer<typeof PROVIDERS.algolia.credentialsSchema>;
+type AlgoliaSearchConfig = z.infer<typeof PROVIDERS.algolia.searchConfigSchema>;
 
 export class AlgoliaSearchProvider implements SearchProvider {
   private credentials: AlgoliaCredentials;
