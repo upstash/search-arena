@@ -155,6 +155,22 @@ const useBattleTable = ({
         },
       },
       {
+        header: "Cost",
+        cell: ({ row }) => {
+          const metadata = row.original.metadata as any;
+          const cost = metadata?.usage?.totalCost;
+
+          if (cost === undefined)
+            return <span className="text-xs text-gray-400">-</span>;
+
+          return (
+            <span className="text-xs text-gray-700 font-mono">
+              ${Number(cost).toFixed(6)}
+            </span>
+          );
+        },
+      },
+      {
         header: "Query Count",
         cell: ({ row }) => {
           const battle = row.original;
@@ -162,6 +178,15 @@ const useBattleTable = ({
             <span className="text-sm text-gray-700">
               {battle.queries.split("\n").length}
             </span>
+          );
+        },
+      },
+      {
+        header: "Attempts",
+        cell: ({ row }) => {
+          const battle = row.original;
+          return (
+            <span className="text-sm text-gray-700">{battle.ratingCount}</span>
           );
         },
       },

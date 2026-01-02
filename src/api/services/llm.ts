@@ -7,6 +7,18 @@ interface EvaluationResult {
   feedback: string;
 }
 
+const GEMINI_INPUT_PRICE_PER_MILLION = 0.30;
+const GEMINI_OUTPUT_PRICE_PER_MILLION = 2.50;
+
+export type UsageMetadata = {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+}
+
 export class LLMService {
   private modelName = "google/gemini-2.5-flash";
   private hasApiKey: boolean;
@@ -29,6 +41,7 @@ export class LLMService {
     db1: EvaluationResult;
     db2: EvaluationResult;
     llmDuration: number;
+    usage: UsageMetadata;
   }> {
     // Return fallback scores if no API key is available
     if (!this.hasApiKey) {
@@ -43,6 +56,14 @@ export class LLMService {
           feedback: "",
         },
         llmDuration: 0,
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          inputCost: 0,
+          outputCost: 0,
+          totalCost: 0,
+        },
       };
     }
     const formatOutput = (results: SearchResult[]) => {
@@ -92,6 +113,15 @@ Provide your evaluation in the following JSON format only:
     const llmStart = performance.now();
     let result;
     let text;
+    let usage = {
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+      inputCost: 0,
+      outputCost: 0,
+      totalCost: 0,
+    };
+
     try {
       const openrouter = createOpenRouter({
         apiKey: process.env.OPEN_ROUTER_API_KEY,
@@ -100,7 +130,23 @@ Provide your evaluation in the following JSON format only:
         model: openrouter(this.modelName),
         prompt: prompt,
       });
+
       text = result.text;
+
+      const inputCost = result.usage.inputTokens ? (result.usage.inputTokens / 1_000_000) * GEMINI_INPUT_PRICE_PER_MILLION : 0;
+      const outputCost = result.usage.outputTokens ? (result.usage.outputTokens / 1_000_000) * GEMINI_OUTPUT_PRICE_PER_MILLION : 0;
+
+      usage = {
+        ...result.usage,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        totalTokens: result.usage.totalTokens ?? 0,
+        inputCost,
+        outputCost,
+        totalCost: inputCost + outputCost,
+      };
+
+      console.log("Usage for LLM call:", usage);
     } catch (error) {
       console.error("LLM API call failed:", error);
       // Return fallback scores on API failure
@@ -114,6 +160,14 @@ Provide your evaluation in the following JSON format only:
           feedback: "",
         },
         llmDuration: 0,
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          inputCost: 0,
+          outputCost: 0,
+          totalCost: 0,
+        },
       };
     }
     const llmEnd = performance.now();
@@ -150,6 +204,7 @@ Provide your evaluation in the following JSON format only:
             : jsonResponse.db2.feedback,
         },
         llmDuration,
+        usage,
       };
     } catch (parseError) {
       console.error("Failed to parse LLM response:", parseError);

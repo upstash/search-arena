@@ -21,6 +21,7 @@ import {
 import { ProviderBadge } from "./provider-badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfigEditor } from "./config-editor";
+import { CostEstimate } from "./cost-estimate";
 import { trpc } from "@/api/trpc/client";
 import { AlertCircle, Info, Loader2Icon } from "lucide-react";
 import {
@@ -48,6 +49,7 @@ type FormData = {
   config1: string; // JSON string
   config2: string; // JSON string
   queries: string;
+  ratingCount: number;
 };
 
 // Get default config as JSON string for a provider
@@ -82,6 +84,7 @@ export function BattleSetupModal({
       config1: "{}",
       config2: "{}",
       queries: initialData?.queries,
+      ratingCount: 1,
     },
   });
   const { data: databases, isLoading: isDatabasesLoading } =
@@ -92,6 +95,8 @@ export function BattleSetupModal({
   const watchedDatabaseId2 = watch("databaseId2");
   const watchedConfig1 = watch("config1");
   const watchedConfig2 = watch("config2");
+  const watchedQueries = watch("queries");
+  const watchedRatingCount = watch("ratingCount");
 
   // Get providers for selected databases
   const db1Provider = useMemo(() => {
@@ -148,6 +153,7 @@ export function BattleSetupModal({
         config1: getDefaultConfigJson(db1?.provider),
         config2: getDefaultConfigJson(db2?.provider),
         queries: initialData.queries,
+        ratingCount: 1,
       });
     } else if (databases?.length === 2) {
       // New battle with exactly 2 databases: pre-select them
@@ -158,6 +164,7 @@ export function BattleSetupModal({
         config1: getDefaultConfigJson(databases[0].provider),
         config2: getDefaultConfigJson(databases[1].provider),
         queries: "",
+        ratingCount: 1,
       });
     } else {
       // New battle: start fresh
@@ -168,6 +175,7 @@ export function BattleSetupModal({
         config1: "{}",
         config2: "{}",
         queries: "",
+        ratingCount: 1,
       });
     }
   }, [open, reset, databases, initialData]);
@@ -204,6 +212,7 @@ export function BattleSetupModal({
       config1: JSON.parse(data.config1),
       config2: JSON.parse(data.config2),
       queries: data.queries,
+      ratingCount: data.ratingCount,
     });
   };
 
@@ -397,6 +406,41 @@ export function BattleSetupModal({
               </p>
             )}
           </div>
+
+          <div>
+            <Label htmlFor="ratingCount" className="mb-1">
+              Ratings per Query (to average out variance)
+            </Label>
+            <Controller
+              name="ratingCount"
+              control={control}
+              rules={{ required: "Rating count is required" }}
+              render={({ field }) => (
+                <Select
+                  value={String(field.value)}
+                  onValueChange={(val) => field.onChange(Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select rating count..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 (Fastest)</SelectItem>
+                    <SelectItem value="3">3 (More Accurate)</SelectItem>
+                    <SelectItem value="5">5 (Very Accurate)</SelectItem>
+                    <SelectItem value="10">
+                      10 (Most Accurate - Slow)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {/* Cost Estimate */}
+          <CostEstimate
+            queries={watchedQueries || ""}
+            ratingCount={watchedRatingCount || 1}
+          />
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>

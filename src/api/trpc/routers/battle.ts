@@ -23,6 +23,8 @@ const createBattleSchema = z.object({
   config1: searchConfigSchema,
   config2: searchConfigSchema,
   queries: z.string().min(1),
+  // Number of times to rate each query with the LLM (1-10)
+  ratingCount: z.number().int().min(1).max(10).default(1),
 });
 
 // Battle router
@@ -59,6 +61,7 @@ export const battleRouter = router({
         config2: JSON.stringify(input.config2),
         queries: input.queries,
         sessionId: ctx.sessionId,
+        ratingCount: input.ratingCount,
       });
 
       after(async () => {

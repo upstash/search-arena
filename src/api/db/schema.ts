@@ -65,6 +65,10 @@ export const battles = pgTable(
     // Session ID to track user's battles
     sessionId: varchar("session_id", { length: 255 }),
     isDemo: boolean("is_demo").default(false),
+    // Number of times to rate each query with the LLM (default 1)
+    ratingCount: integer("rating_count").notNull().default(1),
+    // Battle metadata (aggregated costs, usage, etc.)
+    metadata: jsonb("metadata"),
   },
   (table) => {
     return [
@@ -74,7 +78,7 @@ export const battles = pgTable(
   }
 );
 
-// Battle queries table
+// Each battle has a list of queries, example: "romcom movies", "mafia movies"
 export const battleQueries = pgTable("battle_queries", {
   id: uuid("id").primaryKey().defaultRandom(),
   battleId: uuid("battle_id")
@@ -83,11 +87,14 @@ export const battleQueries = pgTable("battle_queries", {
   queryText: text("query_text").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   error: text("error"),
+  // Number of times to rate this query with the LLM (default 1)
+  ratingCount: integer("rating_count").notNull().default(1),
 });
 
-// The results from a single query, for ex: mafia movies ->
-// [result1, result2, result3] with dbid: 1
-// [result4, result5, result6] with dbid: 2
+// Each query has TWO search results, one from each database,
+//
+// But IF the ratingCount is more than one, then there are ratingCount x 2 search results
+// for each query (one per rating attempt per database).
 export const searchResults = pgTable(
   "search_results",
   {
@@ -98,6 +105,8 @@ export const searchResults = pgTable(
     databaseId: uuid("database_id")
       .notNull()
       .references(() => databases.id, { onDelete: "cascade" }),
+    // Rating index (1, 2, 3...) to differentiate between multiple LLM rating attempts
+    ratingIndex: integer("rating_index").notNull().default(1),
     // Config index (1 or 2) to differentiate results when same database is used with different configs
     configIndex: integer("config_index").notNull().default(1),
     results: jsonb("results").notNull(),
@@ -106,14 +115,14 @@ export const searchResults = pgTable(
     // Timing information in milliseconds
     searchDuration: decimal("search_duration", { precision: 8, scale: 2 }),
     llmDuration: decimal("llm_duration", { precision: 8, scale: 2 }),
-    // Search metadata (enriched input, processing time, etc.)
+    // Search metadata (enriched input, processing time, etc.) AND LLM usage/cost info
     metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => {
     return {
-      // Include configIndex in unique constraint to allow same database with different configs
-      unq: unique().on(table.battleQueryId, table.databaseId, table.configIndex),
+      // Include configIndex and ratingIndex in unique constraint
+      unq: unique().on(table.battleQueryId, table.databaseId, table.configIndex, table.ratingIndex),
     };
   }
 );
