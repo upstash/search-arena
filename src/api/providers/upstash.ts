@@ -3,8 +3,12 @@ import { PROVIDERS } from "@/lib/providers";
 import { SearchProvider, SearchResponse } from "./types";
 
 // Types derived from PROVIDERS registry - kept private to this file
-type UpstashCredentials = z.infer<typeof PROVIDERS.upstash_search.credentialsSchema>;
-type UpstashSearchConfig = z.infer<typeof PROVIDERS.upstash_search.searchConfigSchema>;
+type UpstashCredentials = z.infer<
+  typeof PROVIDERS.upstash_search.credentialsSchema
+>;
+type UpstashSearchConfig = z.infer<
+  typeof PROVIDERS.upstash_search.searchConfigSchema
+>;
 
 export class UpstashSearchProvider implements SearchProvider {
   private credentials: UpstashCredentials;
@@ -19,7 +23,8 @@ export class UpstashSearchProvider implements SearchProvider {
   async search(query: string): Promise<SearchResponse> {
     try {
       // Use namespace from config, or fall back to defaultNamespace from credentials
-      const namespace = this.config.namespace ?? this.credentials.defaultNamespace ?? "";
+      const namespace =
+        this.config.namespace ?? this.credentials.defaultNamespace ?? "";
 
       // Construct the search URL with namespace
       const searchUrl = `${this.credentials.url}/search/${namespace}`;
@@ -52,7 +57,7 @@ export class UpstashSearchProvider implements SearchProvider {
 
       // Get the enriched input header
       const enrichedInput = response.headers.get(
-        "Upstash-Vector-Enriched-Input"
+        "Upstash-Vector-Enriched-Input",
       );
       const decodedEnrichedInput = enrichedInput
         ? decodeURIComponent(enrichedInput)
@@ -101,7 +106,7 @@ export class UpstashSearchProvider implements SearchProvider {
     } catch (error) {
       console.error("Error searching Upstash:", error);
       throw new Error(
-        `Upstash search failed: ${error instanceof Error ? error.message : String(error)}`
+        `Upstash search failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

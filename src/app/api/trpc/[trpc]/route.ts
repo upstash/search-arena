@@ -16,7 +16,7 @@ async function handler(req: Request) {
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
             console.error(
-              `❌ tRPC error on ${path ?? "<no-path>"}: ${error.message}`
+              `❌ tRPC error on ${path ?? "<no-path>"}: ${error.message}`,
             );
           }
         : undefined,

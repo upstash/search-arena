@@ -39,7 +39,7 @@ export const QueryList = ({
         }
       }
     },
-    [selectedQueryIndex, sortedQueries.length, setSelectedQueryIndex]
+    [selectedQueryIndex, sortedQueries.length, setSelectedQueryIndex],
   );
 
   // Add event listener for keyboard navigation

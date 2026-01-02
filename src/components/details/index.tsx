@@ -16,7 +16,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
 
   const [selectedQueryIndex, setSelectedQueryIndex] = useQueryState(
     "query",
-    "0"
+    "0",
   );
   const [sortByState, setSortBy] = useQueryState<SortOptions>("sort");
   const sortBy = sortByState ?? "default";

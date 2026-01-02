@@ -27,7 +27,7 @@ export function ConfigEditor({
     (newValue: string | undefined) => {
       onChange(newValue ?? "");
     },
-    [onChange]
+    [onChange],
   );
 
   return (

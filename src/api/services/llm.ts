@@ -7,8 +7,8 @@ interface EvaluationResult {
   feedback: string;
 }
 
-const GEMINI_INPUT_PRICE_PER_MILLION = 0.30;
-const GEMINI_OUTPUT_PRICE_PER_MILLION = 2.50;
+const GEMINI_INPUT_PRICE_PER_MILLION = 0.3;
+const GEMINI_OUTPUT_PRICE_PER_MILLION = 2.5;
 
 export type UsageMetadata = {
   inputTokens: number;
@@ -17,7 +17,7 @@ export type UsageMetadata = {
   inputCost: number;
   outputCost: number;
   totalCost: number;
-}
+};
 
 export class LLMService {
   private modelName = "google/gemini-2.5-flash";
@@ -36,7 +36,7 @@ export class LLMService {
   async evaluateSearchResults(
     query: string,
     results1: SearchResult[],
-    results2: SearchResult[]
+    results2: SearchResult[],
   ): Promise<{
     db1: EvaluationResult;
     db2: EvaluationResult;
@@ -133,8 +133,14 @@ Provide your evaluation in the following JSON format only:
 
       text = result.text;
 
-      const inputCost = result.usage.inputTokens ? (result.usage.inputTokens / 1_000_000) * GEMINI_INPUT_PRICE_PER_MILLION : 0;
-      const outputCost = result.usage.outputTokens ? (result.usage.outputTokens / 1_000_000) * GEMINI_OUTPUT_PRICE_PER_MILLION : 0;
+      const inputCost = result.usage.inputTokens
+        ? (result.usage.inputTokens / 1_000_000) *
+          GEMINI_INPUT_PRICE_PER_MILLION
+        : 0;
+      const outputCost = result.usage.outputTokens
+        ? (result.usage.outputTokens / 1_000_000) *
+          GEMINI_OUTPUT_PRICE_PER_MILLION
+        : 0;
 
       usage = {
         ...result.usage,

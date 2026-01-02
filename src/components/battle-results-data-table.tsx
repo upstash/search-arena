@@ -331,7 +331,7 @@ const useBattleTable = ({
         },
       },
     ],
-    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle]
+    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle],
   );
 
   const table = useReactTable<BattleResult>({
@@ -360,7 +360,7 @@ export default function BattleResultsDataTable({
     },
     {
       refetchInterval: shouldRefetch ? 4000 : undefined,
-    }
+    },
   );
   useEffect(() => {
     if (isDemo) return;
@@ -368,8 +368,8 @@ export default function BattleResultsDataTable({
     setShouldRefetch(
       battleResults?.some(
         (battle) =>
-          battle.status === "in_progress" || battle.status === "pending"
-      ) ?? false
+          battle.status === "in_progress" || battle.status === "pending",
+      ) ?? false,
     );
   }, [battleResults, isDemo]);
 
@@ -410,7 +410,7 @@ export default function BattleResultsDataTable({
         });
       }
     },
-    [battleResults]
+    [battleResults],
   );
 
   const handleNewBattle = useCallback(() => {
@@ -424,7 +424,7 @@ export default function BattleResultsDataTable({
     (id: string) => {
       deleteBattleMutation.mutate({ battleId: id });
     },
-    [deleteBattleMutation]
+    [deleteBattleMutation],
   );
 
   const table = useBattleTable({
@@ -518,7 +518,7 @@ export default function BattleResultsDataTable({
                               ? null
                               : flexRender(
                                   header.column.columnDef.header,
-                                  header.getContext()
+                                  header.getContext(),
                                 )}
                           </TableHead>
                         );
@@ -547,7 +547,7 @@ export default function BattleResultsDataTable({
                           <TableCell key={cell.id} className="p-2">
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </TableCell>
                         ))}

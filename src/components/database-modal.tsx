@@ -57,7 +57,7 @@ const CREDENTIAL_TEMPLATES: Record<Provider, string> = {
       defaultNamespace: "optional-namespace",
     },
     null,
-    2
+    2,
   ),
   algolia: JSON.stringify(
     {
@@ -66,7 +66,7 @@ const CREDENTIAL_TEMPLATES: Record<Provider, string> = {
       defaultIndex: "your-index-name",
     },
     null,
-    2
+    2,
   ),
 };
 

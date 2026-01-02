@@ -68,7 +68,7 @@ export class BattleService {
             })
             .returning();
           return query;
-        })
+        }),
     );
 
     const sideEffect = async () => {
@@ -120,7 +120,9 @@ export class BattleService {
 
       // Check if databases are v1 format
       if (battle.database1.version !== 1 || battle.database2.version !== 1) {
-        throw new Error("Cannot process battle with v0 (legacy) databases. Please update database credentials to JSON format.");
+        throw new Error(
+          "Cannot process battle with v0 (legacy) databases. Please update database credentials to JSON format.",
+        );
       }
 
       // Check if configs are present
@@ -131,16 +133,22 @@ export class BattleService {
       // Parse credentials
       const credentials1 = parseCredentials(
         battle.database1.provider,
-        battle.database1.credentials
+        battle.database1.credentials,
       );
       const credentials2 = parseCredentials(
         battle.database2.provider,
-        battle.database2.credentials
+        battle.database2.credentials,
       );
 
       // Parse configs
-      const config1 = parseSearchConfig(battle.database1.provider, battle.config1);
-      const config2 = parseSearchConfig(battle.database2.provider, battle.config2);
+      const config1 = parseSearchConfig(
+        battle.database1.provider,
+        battle.config1,
+      );
+      const config2 = parseSearchConfig(
+        battle.database2.provider,
+        battle.config2,
+      );
 
       // Create search providers
       const provider1 = createSearchProvider({
@@ -173,7 +181,7 @@ export class BattleService {
         // Helper function to search with timing
         const searchWithTiming = async (
           provider: typeof provider1,
-          queryText: string
+          queryText: string,
         ) => {
           const start = performance.now();
           const searchResponse = await provider.search(queryText);
@@ -190,7 +198,9 @@ export class BattleService {
 
         for (let i = 0; i < ratingCount; i++) {
           const ratingIndex = i + 1;
-          console.log(`Processing query "${query.queryText}" - Rating ${ratingIndex}/${ratingCount}`);
+          console.log(
+            `Processing query "${query.queryText}" - Rating ${ratingIndex}/${ratingCount}`,
+          );
 
           // Run searches in parallel with individual timing
           const [search1, search2] = await Promise.all([
@@ -204,7 +214,7 @@ export class BattleService {
             await this.llmService.evaluateSearchResults(
               query.queryText,
               search1.searchResponse.results,
-              search2.searchResponse.results
+              search2.searchResponse.results,
             );
 
           totalPromptTokens += usage.inputTokens;
@@ -258,11 +268,13 @@ export class BattleService {
 
         // Add average scores to total
         if (queryScoresDb1.length > 0) {
-          totalScoreDb1 += queryScoresDb1.reduce((a, b) => a + b, 0) / queryScoresDb1.length;
+          totalScoreDb1 +=
+            queryScoresDb1.reduce((a, b) => a + b, 0) / queryScoresDb1.length;
           validQueriesDb1++;
         }
         if (queryScoresDb2.length > 0) {
-          totalScoreDb2 += queryScoresDb2.reduce((a, b) => a + b, 0) / queryScoresDb2.length;
+          totalScoreDb2 +=
+            queryScoresDb2.reduce((a, b) => a + b, 0) / queryScoresDb2.length;
           validQueriesDb2++;
         }
       };
@@ -282,7 +294,7 @@ export class BattleService {
               .where(eq(schema.battleQueries.id, query.id))
               .execute();
           }
-        })
+        }),
       );
 
       // Calculate mean scores
@@ -308,7 +320,7 @@ export class BattleService {
               outputCost: totalOutputCost,
               totalCost: totalCost,
             },
-          }
+          },
         })
         .where(eq(schema.battles.id, battleId))
         .execute();
@@ -333,7 +345,7 @@ export class BattleService {
     const battles = await db.query.battles.findMany({
       where: or(
         eq(schema.battles.status, "in_progress"),
-        eq(schema.battles.status, "pending")
+        eq(schema.battles.status, "pending"),
       ),
     });
 
@@ -567,12 +579,8 @@ export class BattleService {
 
     return queries.map((query) => {
       // Use configIndex to differentiate results (supports self-battles with different configs)
-      const db1Result = query.results.find(
-        (r) => r.configIndex === 1
-      );
-      const db2Result = query.results.find(
-        (r) => r.configIndex === 2
-      );
+      const db1Result = query.results.find((r) => r.configIndex === 1);
+      const db2Result = query.results.find((r) => r.configIndex === 2);
 
       return {
         queryId: query.id,

@@ -1,7 +1,11 @@
 import { AlgoliaSearchProvider } from "./algolia";
 import { UpstashSearchProvider } from "./upstash";
 import { SearchProvider } from "./types";
-import { isValidProvider, parseCredentials, parseSearchConfig } from "@/lib/providers";
+import {
+  isValidProvider,
+  parseCredentials,
+  parseSearchConfig,
+} from "@/lib/providers";
 
 export * from "./types";
 export * from "./algolia";

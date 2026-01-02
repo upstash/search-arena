@@ -54,7 +54,7 @@ export const databaseRouter = router({
         input.provider,
         // Stringify for storage since service expects JSON string
         JSON.stringify(input.credentials),
-        input.devOnly
+        input.devOnly,
       );
     }),
 
@@ -65,7 +65,9 @@ export const databaseRouter = router({
       return ctx.databaseService.updateDatabase(input.id, {
         label: input.label,
         // Stringify for storage since service expects JSON string
-        credentials: input.credentials ? JSON.stringify(input.credentials) : undefined,
+        credentials: input.credentials
+          ? JSON.stringify(input.credentials)
+          : undefined,
         devOnly: input.devOnly,
       });
     }),

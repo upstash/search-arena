@@ -26,7 +26,7 @@ export class AlgoliaSearchProvider implements SearchProvider {
         this.credentials.apiKey,
         {
           requester: createFetchRequester(),
-        }
+        },
       );
 
       // Use index from config, or fall back to defaultIndex from credentials
@@ -88,7 +88,7 @@ export class AlgoliaSearchProvider implements SearchProvider {
     } catch (error) {
       console.error("Error searching Algolia:", error);
       throw new Error(
-        `Algolia search failed: ${error instanceof Error ? error.message : String(error)}`
+        `Algolia search failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

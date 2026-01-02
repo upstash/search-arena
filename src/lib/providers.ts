@@ -88,7 +88,7 @@ export function parseCredentials(provider: string, jsonString: string) {
 /** Validate credentials JSON string, returns error message or null */
 export function validateCredentials(
   provider: string,
-  jsonString: string
+  jsonString: string,
 ): string | null {
   try {
     parseCredentials(provider, jsonString);
@@ -126,7 +126,7 @@ export function getDefaultConfig(provider: string) {
 /** Validate search config JSON string, returns error message or null */
 export function validateSearchConfig(
   provider: string,
-  jsonString: string
+  jsonString: string,
 ): string | null {
   try {
     parseSearchConfig(provider, jsonString);

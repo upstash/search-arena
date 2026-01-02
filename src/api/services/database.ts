@@ -53,7 +53,7 @@ export class DatabaseService {
     label: string,
     provider: string,
     credentials: string,
-    devOnly: boolean = true
+    devOnly: boolean = true,
   ) {
     // Validate provider
     if (!isValidProvider(provider)) {
@@ -84,7 +84,7 @@ export class DatabaseService {
       label?: string;
       credentials?: string;
       devOnly?: boolean;
-    }
+    },
   ) {
     // Update the database record
     const updateData: Partial<typeof schema.databases.$inferInsert> = {};
@@ -162,11 +162,16 @@ export class DatabaseService {
 
       // Only v1 databases can be tested
       if (database.version !== 1) {
-        throw new Error("Cannot test v0 (legacy) database. Please update credentials to JSON format.");
+        throw new Error(
+          "Cannot test v0 (legacy) database. Please update credentials to JSON format.",
+        );
       }
 
       // Parse credentials and use default config
-      const credentials = parseCredentials(database.provider, database.credentials);
+      const credentials = parseCredentials(
+        database.provider,
+        database.credentials,
+      );
       const config = getDefaultConfig(database.provider);
 
       // Create the search provider with new API

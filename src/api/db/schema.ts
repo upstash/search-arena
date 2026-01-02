@@ -75,7 +75,7 @@ export const battles = pgTable(
       index("session_id_idx").on(table.sessionId),
       index("is_demo_idx").on(table.isDemo),
     ];
-  }
+  },
 );
 
 // Each battle has a list of queries, example: "romcom movies", "mafia movies"
@@ -122,9 +122,14 @@ export const searchResults = pgTable(
   (table) => {
     return {
       // Include configIndex and ratingIndex in unique constraint
-      unq: unique().on(table.battleQueryId, table.databaseId, table.configIndex, table.ratingIndex),
+      unq: unique().on(
+        table.battleQueryId,
+        table.databaseId,
+        table.configIndex,
+        table.ratingIndex,
+      ),
     };
-  }
+  },
 );
 
 // Relations for better type safety
@@ -156,7 +161,7 @@ export const battleQueriesRelations = relations(
       references: [battles.id],
     }),
     results: many(searchResults),
-  })
+  }),
 );
 
 export const searchResultsRelations = relations(searchResults, ({ one }) => ({
