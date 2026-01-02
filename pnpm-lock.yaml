@@ -77,10 +77,10 @@ importers:
         version: 10.0.0
       '@upstash/ratelimit':
         specifier: ^2.0.7
-        version: 2.0.7(@upstash/redis@1.36.0)
+        version: 2.0.7(@upstash/redis@1.36.0-rc.6)
       '@upstash/redis':
-        specifier: ^1.36.0
-        version: 1.36.0
+        specifier: 1.36.0-rc.6
+        version: 1.36.0-rc.6
       '@upstash/search':
         specifier: ^0.1.7
         version: 0.1.7
@@ -110,7 +110,7 @@ importers:
         version: 4.1.0
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.0)
+        version: 0.45.1(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.0-rc.6)
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.2.3)
@@ -1748,6 +1748,9 @@ packages:
 
   '@upstash/redis@1.36.0':
     resolution: {integrity: sha512-9zN2UV9QJGPnXfWU3yZBLVQaqqENDh7g+Y4J2vJuSxBCi9FQ0aUOtaXlzuFhnsiZvCqM+eS27ic+tgmkWUsfOg==}
+
+  '@upstash/redis@1.36.0-rc.6':
+    resolution: {integrity: sha512-tpTVf1IOn2oi06S98FoLDILI4JUlRFOxJRYu7q5yv+aA3OO4suAwp1r67pJT6rGX84Lf2mi3obVljtEuOYeUuQ==}
 
   '@upstash/search@0.1.7':
     resolution: {integrity: sha512-rgJ52TP0eUPLFo4K6TZtiC7qICbJnEwkT+TqaDI1vN8/Hk6qidgNC9dpnUUXCiqfwogty1rlSyBhYfk6PRgXjA==}
@@ -4805,12 +4808,16 @@ snapshots:
     dependencies:
       '@upstash/redis': 1.36.0
 
-  '@upstash/ratelimit@2.0.7(@upstash/redis@1.36.0)':
+  '@upstash/ratelimit@2.0.7(@upstash/redis@1.36.0-rc.6)':
     dependencies:
       '@upstash/core-analytics': 0.0.10
-      '@upstash/redis': 1.36.0
+      '@upstash/redis': 1.36.0-rc.6
 
   '@upstash/redis@1.36.0':
+    dependencies:
+      uncrypto: 0.1.3
+
+  '@upstash/redis@1.36.0-rc.6':
     dependencies:
       uncrypto: 0.1.3
 
@@ -5138,12 +5145,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.0):
+  drizzle-orm@0.45.1(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.0-rc.6):
     optionalDependencies:
       '@neondatabase/serverless': 1.0.2
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.16.0
-      '@upstash/redis': 1.36.0
+      '@upstash/redis': 1.36.0-rc.6
 
   dunder-proto@1.0.1:
     dependencies:

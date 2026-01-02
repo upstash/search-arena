@@ -8,7 +8,7 @@ import { fromError } from "zod-validation-error";
 
 export const PROVIDERS = {
   upstash_search: {
-    name: "Upstash",
+    name: "Upstash Search",
     color: colors.emerald,
     credentialsSchema: z.object({
       url: z.string().url(),
@@ -28,6 +28,38 @@ export const PROVIDERS = {
       inputEnrichment: true,
       semanticWeight: 0.75,
     },
+    credentialsTemplate: JSON.stringify(
+      {
+        url: "https://your-database.upstash.io",
+        token: "your-rest-token",
+        defaultNamespace: "optional-namespace",
+      },
+      null,
+      2,
+    ),
+  },
+
+  upstash_redis_search: {
+    name: "Redis Search",
+    color: colors.red,
+    credentialsSchema: z.object({
+      url: z.string().url(),
+      token: z.string().min(1),
+      defaultIndex: z.string().min(1).optional(),
+    }),
+    searchConfigSchema: z.strictObject({
+      index: z.string().optional(),
+    }),
+    defaultConfig: {},
+    credentialsTemplate: JSON.stringify(
+      {
+        url: "https://your-database.upstash.io",
+        token: "your-rest-token",
+        defaultIndex: "optional-index-name",
+      },
+      null,
+      2,
+    ),
   },
 
   algolia: {
@@ -36,7 +68,7 @@ export const PROVIDERS = {
     credentialsSchema: z.object({
       applicationId: z.string().min(1),
       apiKey: z.string().min(1),
-      defaultIndex: z.string().min(1),
+      defaultIndex: z.string().min(1).optional(),
     }),
     searchConfigSchema: z.strictObject({
       index: z.string().optional(),
@@ -45,6 +77,15 @@ export const PROVIDERS = {
     defaultConfig: {
       hitsPerPage: 10,
     },
+    credentialsTemplate: JSON.stringify(
+      {
+        applicationId: "your-app-id",
+        apiKey: "your-api-key",
+        defaultIndex: "your-index-name",
+      },
+      null,
+      2,
+    ),
   },
 } as const;
 
@@ -105,6 +146,14 @@ export function validateCredentials(
     }
     return "Validation error";
   }
+}
+
+/** Get credentials template for a provider */
+export function getCredentialsTemplate(provider: string): string {
+  if (!isValidProvider(provider)) {
+    return "{}";
+  }
+  return PROVIDERS[provider].credentialsTemplate;
 }
 
 // =============================================================================

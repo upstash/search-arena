@@ -1,5 +1,6 @@
 import { AlgoliaSearchProvider } from "./algolia";
 import { UpstashSearchProvider } from "./upstash";
+import { UpstashRedisSearchProvider } from "./upstash_redis_search";
 import { SearchProvider } from "./types";
 import {
   isValidProvider,
@@ -10,10 +11,12 @@ import {
 export * from "./types";
 export * from "./algolia";
 export * from "./upstash";
+export * from "./upstash_redis_search";
 
 // Provider class registry - maps provider key to its class constructor
 const PROVIDER_CLASSES = {
   upstash_search: UpstashSearchProvider,
+  upstash_redis_search: UpstashRedisSearchProvider,
   algolia: AlgoliaSearchProvider,
 } as const;
 

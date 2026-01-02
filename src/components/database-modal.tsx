@@ -31,7 +31,7 @@ import {
   Provider,
   PROVIDER_KEYS,
   DEFAULT_PROVIDER,
-  isValidProvider,
+  getCredentialsTemplate,
 } from "@/lib/providers";
 
 interface DatabaseModalProps {
@@ -47,35 +47,6 @@ type FormData = {
   credentials: string;
   devOnly: boolean;
 };
-
-// Generate credential templates from PROVIDERS registry
-const CREDENTIAL_TEMPLATES: Record<Provider, string> = {
-  upstash_search: JSON.stringify(
-    {
-      url: "https://your-database.upstash.io",
-      token: "your-rest-token",
-      defaultNamespace: "optional-namespace",
-    },
-    null,
-    2,
-  ),
-  algolia: JSON.stringify(
-    {
-      applicationId: "your-app-id",
-      apiKey: "your-api-key",
-      defaultIndex: "your-index-name",
-    },
-    null,
-    2,
-  ),
-};
-
-function getCredentialTemplate(provider: string): string {
-  if (isValidProvider(provider)) {
-    return CREDENTIAL_TEMPLATES[provider];
-  }
-  return "{}";
-}
 
 export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   const isEditing = !!database;
@@ -95,7 +66,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
       provider: database?.provider || DEFAULT_PROVIDER,
       credentials:
         database?.credentials ||
-        getCredentialTemplate(database?.provider || DEFAULT_PROVIDER),
+        getCredentialsTemplate(database?.provider || DEFAULT_PROVIDER),
       devOnly: database?.devOnly ?? true,
     },
   });
@@ -108,7 +79,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
         label: database.label || "",
         provider: database.provider || DEFAULT_PROVIDER,
         credentials:
-          database.credentials || getCredentialTemplate(database.provider),
+          database.credentials || getCredentialsTemplate(database.provider),
         devOnly: database.devOnly ?? true,
       });
     } else {
@@ -140,7 +111,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
           reset({
             label: "",
             provider: DEFAULT_PROVIDER,
-            credentials: getCredentialTemplate(DEFAULT_PROVIDER),
+            credentials: getCredentialsTemplate(DEFAULT_PROVIDER),
             devOnly: true,
           });
         }
@@ -158,7 +129,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
   // Update credentials template when provider changes (only for add mode)
   useEffect(() => {
     if (!isEditing) {
-      setValue("credentials", getCredentialTemplate(watchedProvider));
+      setValue("credentials", getCredentialsTemplate(watchedProvider));
     }
   }, [watchedProvider, setValue, isEditing]);
 
@@ -169,7 +140,7 @@ export function DatabaseModal({ open, onClose, database }: DatabaseModalProps) {
         label: database.label || "",
         provider: database.provider || DEFAULT_PROVIDER,
         credentials:
-          database.credentials || getCredentialTemplate(database.provider),
+          database.credentials || getCredentialsTemplate(database.provider),
         devOnly: database.devOnly ?? true,
       });
     }
