@@ -58,11 +58,6 @@ export class UpstashRedisSearchProvider implements SearchProvider {
       // Interpolate {{query}} placeholders in the filter config
       const filter = interpolateQuery(this.config.filter) as any;
 
-      console.log("params", {
-        filter,
-        limit: this.config.topK,
-      });
-
       // Perform the search query
       const res = await index.query({
         filter,
@@ -77,9 +72,17 @@ export class UpstashRedisSearchProvider implements SearchProvider {
           id: result.key,
           title: data?.title ?? "Untitled",
           description: data?.description ?? "No description available",
-          score: result.score ?? 0,
+          score: Number(result.score) ?? 0,
         };
       });
+
+      // console.log("Returned results: ", JSON.stringify({
+      //   params: {
+      //     filter,
+      //     limit: this.config.topK,
+      //   },
+      //   results,
+      // }, undefined, 2))
 
       // Return results with metadata
       return {
@@ -87,6 +90,8 @@ export class UpstashRedisSearchProvider implements SearchProvider {
         metadata: {
           totalResults: res.length,
           indexName,
+          limit: this.config.topK,
+          filter: JSON.stringify(filter),
         },
       };
     } catch (error) {

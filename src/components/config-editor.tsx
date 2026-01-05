@@ -25,7 +25,7 @@ function formatJson(jsonString: string): string {
 export function ConfigEditor({
   value,
   onChange,
-  height = "120px",
+  height = "300px",
   readOnly = false,
 }: ConfigEditorProps) {
   const hasFormatted = useRef(false);
