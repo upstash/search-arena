@@ -39,6 +39,7 @@ const index = client.index(process.env.UPSTASH_SEARCH_INDEX!);
 
 // Output file path
 const outputPath = resolve(
+  // @ts-ignore
   import.meta.dir,
   `../dataset/${process.env.UPSTASH_SEARCH_INDEX}-export.json`
 );

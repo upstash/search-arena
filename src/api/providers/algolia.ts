@@ -31,6 +31,7 @@ export class AlgoliaSearchProvider implements SearchProvider {
 
       // Use index from config, or fall back to defaultIndex from credentials
       const indexName = this.config.index ?? this.credentials.defaultIndex;
+      if (!indexName) throw new Error("Index name not provided");
 
       // Define the type for search hits
       interface AlgoliaHit {
