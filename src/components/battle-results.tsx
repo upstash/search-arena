@@ -17,7 +17,7 @@ export function BattleResults({ isDemo }: { isDemo: boolean }) {
 
   const inProgressCount =
     battleResults?.filter(
-      (b) => b.status === "in_progress" || b.status === "pending"
+      (b) => b.status === "in_progress" || b.status === "pending",
     ).length ?? 0;
 
   return (

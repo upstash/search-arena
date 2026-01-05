@@ -1,13 +1,21 @@
-import { AlgoliaCredentials, SearchProvider, SearchResponse } from "./types";
+import { z } from "zod";
+import { PROVIDERS } from "@/lib/providers";
+import { SearchProvider, SearchResponse } from "./types";
 import { algoliasearch } from "algoliasearch";
 import { createFetchRequester } from "@algolia/requester-fetch";
 
+// Types derived from PROVIDERS registry - kept private to this file
+type AlgoliaCredentials = z.infer<typeof PROVIDERS.algolia.credentialsSchema>;
+type AlgoliaSearchConfig = z.infer<typeof PROVIDERS.algolia.searchConfigSchema>;
+
 export class AlgoliaSearchProvider implements SearchProvider {
   private credentials: AlgoliaCredentials;
+  private config: AlgoliaSearchConfig;
   name = "algolia";
 
-  constructor(credentials: AlgoliaCredentials) {
+  constructor(credentials: AlgoliaCredentials, config: AlgoliaSearchConfig) {
     this.credentials = credentials;
+    this.config = config;
   }
 
   async search(query: string): Promise<SearchResponse> {
@@ -18,8 +26,12 @@ export class AlgoliaSearchProvider implements SearchProvider {
         this.credentials.apiKey,
         {
           requester: createFetchRequester(),
-        }
+        },
       );
+
+      // Use index from config, or fall back to defaultIndex from credentials
+      const indexName = this.config.index ?? this.credentials.defaultIndex;
+      if (!indexName) throw new Error("Index name not provided");
 
       // Define the type for search hits
       interface AlgoliaHit {
@@ -35,9 +47,9 @@ export class AlgoliaSearchProvider implements SearchProvider {
       const { results: searchResults } = await client.search({
         requests: [
           {
-            indexName: this.credentials.index,
+            indexName,
             query,
-            hitsPerPage: 10,
+            hitsPerPage: this.config.hitsPerPage,
           },
         ],
       });
@@ -70,12 +82,14 @@ export class AlgoliaSearchProvider implements SearchProvider {
         metadata: {
           totalResults: hits.length,
           processingTime: firstResult?.processingTimeMS,
+          hitsPerPage: this.config.hitsPerPage,
+          index: indexName,
         },
       };
     } catch (error) {
       console.error("Error searching Algolia:", error);
       throw new Error(
-        `Algolia search failed: ${error instanceof Error ? error.message : String(error)}`
+        `Algolia search failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

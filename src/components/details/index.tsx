@@ -16,7 +16,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
 
   const [selectedQueryIndex, setSelectedQueryIndex] = useQueryState(
     "query",
-    "0"
+    "0",
   );
   const [sortByState, setSortBy] = useQueryState<SortOptions>("sort");
   const sortBy = sortByState ?? "default";
@@ -102,7 +102,7 @@ export function BattleDetails({ battleId }: { battleId: string }) {
 
         {/* Query Details Main Content */}
         <motion.div
-          className="view-transition-query-details"
+          className="view-transition-query-details w-full"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}

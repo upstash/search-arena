@@ -17,7 +17,7 @@ export function SimpleTooltip({
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent>
-        <p>{content}</p>
+        <div>{content}</div>
       </TooltipContent>
     </Tooltip>
   );

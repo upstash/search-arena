@@ -6,13 +6,24 @@ import {
   router,
 } from "../trpc";
 import { after } from "next/server";
+import { PROVIDERS } from "@/lib/providers";
+
+// Search config schema - union of all provider configs from PROVIDERS registry
+const searchConfigSchema = z.union(
+  Object.values(PROVIDERS).map((p) => p.searchConfigSchema),
+);
 
 // Input validation schemas
 const createBattleSchema = z.object({
   label: z.string().min(1),
   databaseId1: z.uuid(),
   databaseId2: z.uuid(),
+  // Configs as JSON objects, validated with provider schemas
+  config1: searchConfigSchema,
+  config2: searchConfigSchema,
   queries: z.string().min(1),
+  // Number of times to rate each query with the LLM (1-10)
+  ratingCount: z.number().int().min(1).max(10).default(1),
 });
 
 // Battle router
@@ -40,13 +51,17 @@ export const battleRouter = router({
   create: ratelimitProcedure("scan", 4)
     .input(createBattleSchema)
     .mutation(async ({ ctx, input }) => {
-      const { battle, sideEffect } = await ctx.battleService.createBattle(
-        input.label,
-        input.databaseId1,
-        input.databaseId2,
-        input.queries,
-        ctx.sessionId
-      );
+      const { battle, sideEffect } = await ctx.battleService.createBattle({
+        label: input.label,
+        databaseId1: input.databaseId1,
+        databaseId2: input.databaseId2,
+        // Stringify for storage since service expects JSON strings
+        config1: JSON.stringify(input.config1),
+        config2: JSON.stringify(input.config2),
+        queries: input.queries,
+        sessionId: ctx.sessionId,
+        ratingCount: input.ratingCount,
+      });
 
       after(async () => {
         await sideEffect();

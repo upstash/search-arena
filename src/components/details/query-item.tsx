@@ -1,5 +1,6 @@
 import { BattleQuery, BattleResult } from "@/api/trpc";
 import { Trophy } from "lucide-react";
+import { getDatabaseStats } from "@/lib/stats";
 
 export function QueryItem({
   queryResult,
@@ -14,23 +15,16 @@ export function QueryItem({
   isSelected: boolean;
   onSelect: (index: number) => void;
 }) {
-  // Find database results
-  const db1Result = queryResult.results.find(
-    (r) => r.databaseId === battle?.databaseId1
-  );
-  const db2Result = queryResult.results.find(
-    (r) => r.databaseId === battle?.databaseId2
-  );
+  const db1Stats = getDatabaseStats(queryResult, battle.databaseId1, 1);
+  const db2Stats = getDatabaseStats(queryResult, battle.databaseId2, 2);
 
   // Calculate score difference
-  const scoreDiff = Math.abs(
-    Number(db1Result?.score) - Number(db2Result?.score)
-  );
+  const scoreDiff = Math.abs(db1Stats.mean - db2Stats.mean);
 
   // Determine winner
-  const db1Wins = Number(db1Result?.score) > Number(db2Result?.score);
-  const db2Wins = Number(db2Result?.score) > Number(db1Result?.score);
-  const isLLMDisabled = db1Result?.score === "-1" && db2Result?.score === "-1";
+  const db1Wins = db1Stats.mean > db2Stats.mean;
+  const db2Wins = db2Stats.mean > db1Stats.mean;
+  const isLLMDisabled = db1Stats.mean === -1 && db2Stats.mean === -1;
 
   return (
     <div
@@ -50,9 +44,13 @@ export function QueryItem({
       ) : !isLLMDisabled ? (
         <div className="flex items-center justify-between text-xs">
           <div className="flex space-x-2">
-            <span className="text-blue-600 font-mono">{db1Result?.score}</span>
+            <span className="text-blue-600 font-mono">
+              {db1Stats.mean.toFixed(1)}
+            </span>
             <span className="text-gray-400">vs</span>
-            <span className="text-green-600 font-mono">{db2Result?.score}</span>
+            <span className="text-green-600 font-mono">
+              {db2Stats.mean.toFixed(1)}
+            </span>
           </div>
           <div className="flex items-center space-x-1">
             <span className="text-gray-500 font-mono">

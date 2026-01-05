@@ -47,6 +47,18 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
         )}
       </div>
 
+      {(() => {
+        const metadata = battle.metadata as any;
+        const totalCost = metadata?.usage?.totalCost;
+        if (totalCost !== undefined) {
+          return (
+            <div className="ml-4 text-xs bg-gray-100 px-2 py-1 rounded text-gray-500 font-mono">
+              ${Number(totalCost).toFixed(6)}
+            </div>
+          );
+        }
+      })()}
+
       <BattleDemoCheckbox battleId={battleId} />
     </motion.div>
   );

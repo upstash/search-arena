@@ -2,6 +2,18 @@ import { db, schema } from "../db";
 import { createSearchProvider } from "../providers";
 import { LLMService } from "./llm";
 import { and, eq, or } from "drizzle-orm";
+import { parseCredentials, parseSearchConfig } from "@/lib/providers";
+
+type CreateBattleParams = {
+  label: string;
+  databaseId1: string;
+  databaseId2: string;
+  config1: string; // JSON string
+  config2: string; // JSON string
+  queries: string;
+  sessionId?: string;
+  ratingCount?: number;
+};
 
 export class BattleService {
   private llmService: LLMService;
@@ -13,23 +25,30 @@ export class BattleService {
   /**
    * Creates a new battle between two databases
    */
-  async createBattle(
-    label: string,
-    databaseId1: string,
-    databaseId2: string,
-    queries: string,
-    sessionId?: string
-  ) {
-    // Create the battle record
+  async createBattle(params: CreateBattleParams) {
+    const {
+      label,
+      databaseId1,
+      databaseId2,
+      config1,
+      config2,
+      queries,
+      sessionId,
+    } = params;
+
+    // Create the battle record with configs (already JSON strings)
     const [battle] = await db
       .insert(schema.battles)
       .values({
         label,
         databaseId1,
         databaseId2,
+        config1,
+        config2,
         status: "pending",
         queries,
         sessionId,
+        ratingCount: params.ratingCount || 1,
       })
       .returning();
 
@@ -45,10 +64,11 @@ export class BattleService {
             .values({
               battleId: battle.id,
               queryText,
+              ratingCount: params.ratingCount || 1,
             })
             .returning();
           return query;
-        })
+        }),
     );
 
     const sideEffect = async () => {
@@ -98,26 +118,70 @@ export class BattleService {
         throw new Error("Database credentials not found");
       }
 
-      // Create search providers
-      const provider1 = createSearchProvider(
+      // Check if databases are v1 format
+      if (battle.database1.version !== 1 || battle.database2.version !== 1) {
+        throw new Error(
+          "Cannot process battle with v0 (legacy) databases. Please update database credentials to JSON format.",
+        );
+      }
+
+      // Check if configs are present
+      if (!battle.config1 || !battle.config2) {
+        throw new Error("Battle configs not found");
+      }
+
+      // Parse credentials
+      const credentials1 = parseCredentials(
         battle.database1.provider,
-        battle.database1.credentials
+        battle.database1.credentials,
+      );
+      const credentials2 = parseCredentials(
+        battle.database2.provider,
+        battle.database2.credentials,
       );
 
-      const provider2 = createSearchProvider(
-        battle.database2.provider,
-        battle.database2.credentials
+      // Parse configs
+      const config1 = parseSearchConfig(
+        battle.database1.provider,
+        battle.config1,
       );
+      const config2 = parseSearchConfig(
+        battle.database2.provider,
+        battle.config2,
+      );
+
+      // Create search providers
+      const provider1 = createSearchProvider({
+        provider: battle.database1.provider,
+        credentials: credentials1,
+        config: config1,
+      });
+
+      const provider2 = createSearchProvider({
+        provider: battle.database2.provider,
+        credentials: credentials2,
+        config: config2,
+      });
 
       // Process each query
       let totalScoreDb1 = 0;
       let totalScoreDb2 = 0;
 
+      // Accumulators for total battle stats
+      let totalPromptTokens = 0;
+      let totalCompletionTokens = 0;
+      let totalInputCost = 0;
+      let totalOutputCost = 0;
+      let totalCost = 0;
+
+      let validQueriesDb1 = 0;
+      let validQueriesDb2 = 0;
+
       const searchQuery = async (query: schema.BattleQuery) => {
         // Helper function to search with timing
         const searchWithTiming = async (
           provider: typeof provider1,
-          queryText: string
+          queryText: string,
         ) => {
           const start = performance.now();
           const searchResponse = await provider.search(queryText);
@@ -128,61 +192,91 @@ export class BattleService {
           };
         };
 
-        // Run searches in parallel with individual timing
-        const [search1, search2] = await Promise.all([
-          searchWithTiming(provider1, query.queryText),
-          searchWithTiming(provider2, query.queryText),
-        ]);
+        const ratingCount = query.ratingCount || 1;
+        const queryScoresDb1: number[] = [];
+        const queryScoresDb2: number[] = [];
 
-        console.log(
-          "> " + provider1.name,
-          search1.searchResponse.results.at(0)
-        );
-        console.log(
-          "> " + provider2.name,
-          search2.searchResponse.results.at(0)
-        );
-
-        // Evaluate results with LLM (timing is handled inside the LLM service)
-        console.log(`Evaluating results for query:`, query.queryText);
-        const { db1, db2, llmDuration } =
-          await this.llmService.evaluateSearchResults(
-            query.queryText,
-            search1.searchResponse.results,
-            search2.searchResponse.results
+        for (let i = 0; i < ratingCount; i++) {
+          const ratingIndex = i + 1;
+          console.log(
+            `Processing query "${query.queryText}" - Rating ${ratingIndex}/${ratingCount}`,
           );
 
-        // Store results with timing information
-        await db
-          .insert(schema.searchResults)
-          .values({
-            battleQueryId: query.id,
-            databaseId: battle.databaseId1,
-            results: search1.searchResponse.results,
-            score: String(db1.score), // Convert to string for Drizzle compatibility
-            llmFeedback: db1.feedback,
-            searchDuration: String(search1.duration.toFixed(2)),
-            llmDuration: String(llmDuration.toFixed(2)),
-            metadata: search1.searchResponse.metadata,
-          })
-          .execute();
+          // Run searches in parallel with individual timing
+          const [search1, search2] = await Promise.all([
+            searchWithTiming(provider1, query.queryText),
+            searchWithTiming(provider2, query.queryText),
+          ]);
 
-        await db
-          .insert(schema.searchResults)
-          .values({
-            battleQueryId: query.id,
-            databaseId: battle.databaseId2,
-            results: search2.searchResponse.results,
-            score: String(db2.score), // Convert to string for Drizzle compatibility
-            llmFeedback: db2.feedback,
-            searchDuration: String(search2.duration.toFixed(2)),
-            llmDuration: String(llmDuration.toFixed(2)),
-            metadata: search2.searchResponse.metadata,
-          })
-          .execute();
+          // Evaluate results with LLM (timing is handled inside the LLM service)
+          console.log(`Evaluating results for query:`, query.queryText);
+          const { db1, db2, llmDuration, usage } =
+            await this.llmService.evaluateSearchResults(
+              query.queryText,
+              search1.searchResponse.results,
+              search2.searchResponse.results,
+            );
 
-        totalScoreDb1 += db1.score;
-        totalScoreDb2 += db2.score;
+          totalPromptTokens += usage.inputTokens;
+          totalCompletionTokens += usage.outputTokens;
+          totalInputCost += usage.inputCost;
+          totalOutputCost += usage.outputCost;
+          totalCost += usage.totalCost;
+
+          // Merge LLM usage into metadata
+          const formatMetadata = (searchMetadata: any) => ({
+            ...searchMetadata,
+            usage,
+          });
+
+          // Store results with timing information
+          await db
+            .insert(schema.searchResults)
+            .values({
+              battleQueryId: query.id,
+              databaseId: battle.databaseId1,
+              configIndex: 1,
+              ratingIndex: ratingIndex,
+              results: search1.searchResponse.results,
+              score: String(db1.score), // Convert to string for Drizzle compatibility
+              llmFeedback: db1.feedback,
+              searchDuration: String(search1.duration.toFixed(2)),
+              llmDuration: String(llmDuration.toFixed(2)),
+              metadata: formatMetadata(search1.searchResponse.metadata),
+            })
+            .execute();
+
+          await db
+            .insert(schema.searchResults)
+            .values({
+              battleQueryId: query.id,
+              databaseId: battle.databaseId2,
+              configIndex: 2,
+              ratingIndex: ratingIndex,
+              results: search2.searchResponse.results,
+              score: String(db2.score), // Convert to string for Drizzle compatibility
+              llmFeedback: db2.feedback,
+              searchDuration: String(search2.duration.toFixed(2)),
+              llmDuration: String(llmDuration.toFixed(2)),
+              metadata: formatMetadata(search2.searchResponse.metadata),
+            })
+            .execute();
+
+          if (db1.score !== -1) queryScoresDb1.push(db1.score);
+          if (db2.score !== -1) queryScoresDb2.push(db2.score);
+        }
+
+        // Add average scores to total
+        if (queryScoresDb1.length > 0) {
+          totalScoreDb1 +=
+            queryScoresDb1.reduce((a, b) => a + b, 0) / queryScoresDb1.length;
+          validQueriesDb1++;
+        }
+        if (queryScoresDb2.length > 0) {
+          totalScoreDb2 +=
+            queryScoresDb2.reduce((a, b) => a + b, 0) / queryScoresDb2.length;
+          validQueriesDb2++;
+        }
       };
 
       await Promise.all(
@@ -190,6 +284,7 @@ export class BattleService {
           try {
             return await searchQuery(query);
           } catch (error) {
+            console.error(`Error processing query ${query.queryText}`, error);
             // Update the query with error
             await db
               .update(schema.battleQueries)
@@ -199,14 +294,14 @@ export class BattleService {
               .where(eq(schema.battleQueries.id, query.id))
               .execute();
           }
-        })
+        }),
       );
 
       // Calculate mean scores
       const meanScoreDb1 =
-        queries.length > 0 ? totalScoreDb1 / queries.length : 0;
+        validQueriesDb1 > 0 ? totalScoreDb1 / validQueriesDb1 : 0;
       const meanScoreDb2 =
-        queries.length > 0 ? totalScoreDb2 / queries.length : 0;
+        validQueriesDb2 > 0 ? totalScoreDb2 / validQueriesDb2 : 0;
 
       // Update battle with results
       await db
@@ -214,8 +309,18 @@ export class BattleService {
         .set({
           status: "completed",
           completedAt: new Date(),
-          meanScoreDb1: String(meanScoreDb1),
-          meanScoreDb2: String(meanScoreDb2),
+          meanScoreDb1: meanScoreDb1.toFixed(2),
+          meanScoreDb2: meanScoreDb2.toFixed(2),
+          metadata: {
+            usage: {
+              promptTokens: totalPromptTokens,
+              completionTokens: totalCompletionTokens,
+              totalTokens: totalPromptTokens + totalCompletionTokens,
+              inputCost: totalInputCost,
+              outputCost: totalOutputCost,
+              totalCost: totalCost,
+            },
+          },
         })
         .where(eq(schema.battles.id, battleId))
         .execute();
@@ -240,7 +345,7 @@ export class BattleService {
     const battles = await db.query.battles.findMany({
       where: or(
         eq(schema.battles.status, "in_progress"),
-        eq(schema.battles.status, "pending")
+        eq(schema.battles.status, "pending"),
       ),
     });
 
@@ -473,13 +578,9 @@ export class BattleService {
     });
 
     return queries.map((query) => {
-      // With our improved relations, we no longer need type assertions
-      const db1Result = query.results.find(
-        (r) => r.databaseId === battle.databaseId1
-      );
-      const db2Result = query.results.find(
-        (r) => r.databaseId === battle.databaseId2
-      );
+      // Use configIndex to differentiate results (supports self-battles with different configs)
+      const db1Result = query.results.find((r) => r.configIndex === 1);
+      const db2Result = query.results.find((r) => r.configIndex === 2);
 
       return {
         queryId: query.id,

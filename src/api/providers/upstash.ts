@@ -1,34 +1,44 @@
-import {
-  SearchProvider,
-  SearchResponse,
-  UpstashSearchCredentials,
-} from "./types";
+import { z } from "zod";
+import { PROVIDERS } from "@/lib/providers";
+import { SearchProvider, SearchResponse } from "./types";
+
+// Types derived from PROVIDERS registry - kept private to this file
+type UpstashCredentials = z.infer<
+  typeof PROVIDERS.upstash_search.credentialsSchema
+>;
+type UpstashSearchConfig = z.infer<
+  typeof PROVIDERS.upstash_search.searchConfigSchema
+>;
 
 export class UpstashSearchProvider implements SearchProvider {
-  private credentials: UpstashSearchCredentials;
+  private credentials: UpstashCredentials;
+  private config: UpstashSearchConfig;
   name = "upstash_search";
 
-  constructor(credentials: UpstashSearchCredentials) {
+  constructor(credentials: UpstashCredentials, config: UpstashSearchConfig) {
     this.credentials = credentials;
+    this.config = config;
   }
 
   async search(query: string): Promise<SearchResponse> {
     try {
-      // Construct the search URL
-      const searchUrl = `${this.credentials.url}/search/${this.credentials.index}`;
+      // Use namespace from config, or fall back to defaultNamespace from credentials
+      const namespace =
+        this.config.namespace ?? this.credentials.defaultNamespace ?? "";
 
-      // Use the configured semantic weight value
-      const semanticWeight = this.credentials.semanticWeight;
+      // Construct the search URL with namespace
+      const searchUrl = `${this.credentials.url}/search/${namespace}`;
 
-      // Prepare the request body
+      // Prepare the request body using config values
       const requestBody = {
         query,
-        topK: this.credentials.topk,
+        topK: this.config.topK,
         includeMetadata: true,
-        reranking: this.credentials.reranking,
-        inputEnrichment: this.credentials.inputEnrichment,
-        semanticWeight,
+        reranking: this.config.reranking,
+        inputEnrichment: this.config.inputEnrichment,
+        semanticWeight: this.config.semanticWeight,
         _returnEnrichedInput: true,
+        _appendOriginalInputToEnrichmentResult: true,
       };
 
       // Make the fetch request
@@ -47,7 +57,7 @@ export class UpstashSearchProvider implements SearchProvider {
 
       // Get the enriched input header
       const enrichedInput = response.headers.get(
-        "Upstash-Vector-Enriched-Input"
+        "Upstash-Vector-Enriched-Input",
       );
       const decodedEnrichedInput = enrichedInput
         ? decodeURIComponent(enrichedInput)
@@ -86,16 +96,17 @@ export class UpstashSearchProvider implements SearchProvider {
         metadata: {
           enrichedInput: decodedEnrichedInput,
           totalResults: upstashResults.length,
-          topk: this.credentials.topk,
-          reranking: this.credentials.reranking,
-          inputEnrichment: this.credentials.inputEnrichment,
-          semanticWeight: semanticWeight,
+          topK: this.config.topK,
+          reranking: this.config.reranking,
+          inputEnrichment: this.config.inputEnrichment,
+          semanticWeight: this.config.semanticWeight,
+          namespace,
         },
       };
     } catch (error) {
       console.error("Error searching Upstash:", error);
       throw new Error(
-        `Upstash search failed: ${error instanceof Error ? error.message : String(error)}`
+        `Upstash search failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
   },
+  reactCompiler: true,
 };
 
 export default nextConfig;

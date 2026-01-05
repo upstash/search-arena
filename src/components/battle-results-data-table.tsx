@@ -5,7 +5,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -156,6 +155,22 @@ const useBattleTable = ({
         },
       },
       {
+        header: "Cost",
+        cell: ({ row }) => {
+          const metadata = row.original.metadata as any;
+          const cost = metadata?.usage?.totalCost;
+
+          if (cost === undefined)
+            return <span className="text-xs text-gray-400">-</span>;
+
+          return (
+            <span className="text-xs text-gray-700 font-mono">
+              ${Number(cost).toFixed(6)}
+            </span>
+          );
+        },
+      },
+      {
         header: "Query Count",
         cell: ({ row }) => {
           const battle = row.original;
@@ -163,6 +178,15 @@ const useBattleTable = ({
             <span className="text-sm text-gray-700">
               {battle.queries.split("\n").length}
             </span>
+          );
+        },
+      },
+      {
+        header: "Attempts",
+        cell: ({ row }) => {
+          const battle = row.original;
+          return (
+            <span className="text-sm text-gray-700">{battle.ratingCount}</span>
           );
         },
       },
@@ -231,6 +255,53 @@ const useBattleTable = ({
         },
       },
       {
+        id: "configs",
+        header: "Configs",
+        cell: ({ row }) => {
+          const battle = row.original;
+          const config1 = battle.config1;
+          const config2 = battle.config2;
+
+          // Format config for display
+          const formatConfig = (configJson: string | null) => {
+            if (!configJson) return "N/A";
+            try {
+              const config = JSON.parse(configJson);
+              const parts: string[] = [];
+              if (config.topK) parts.push(`topK: ${config.topK}`);
+              if (config.hitsPerPage) parts.push(`hits: ${config.hitsPerPage}`);
+              if (config.reranking !== undefined)
+                parts.push(`rerank: ${config.reranking ? "on" : "off"}`);
+              if (config.semanticWeight !== undefined)
+                parts.push(`sw: ${config.semanticWeight}`);
+              if (config.inputEnrichment !== undefined)
+                parts.push(`ie: ${config.inputEnrichment ? "on" : "off"}`);
+              if (config.namespace) parts.push(`ns: ${config.namespace}`);
+              return parts.length > 0 ? parts.join(", ") : "default";
+            } catch {
+              return "N/A";
+            }
+          };
+
+          return (
+            <div className="text-xs text-gray-600 space-y-1 max-w-[250px]">
+              <SimpleTooltip content={config1 || "No config"}>
+                <div className="truncate">
+                  <span className="text-blue-600 font-medium">DB1:</span>{" "}
+                  {formatConfig(config1)}
+                </div>
+              </SimpleTooltip>
+              <SimpleTooltip content={config2 || "No config"}>
+                <div className="truncate">
+                  <span className="text-green-600 font-medium">DB2:</span>{" "}
+                  {formatConfig(config2)}
+                </div>
+              </SimpleTooltip>
+            </div>
+          );
+        },
+      },
+      {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
@@ -262,7 +333,7 @@ const useBattleTable = ({
         },
       },
     ],
-    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle]
+    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle],
   );
 
   const table = useReactTable<BattleResult>({
@@ -291,17 +362,16 @@ export default function BattleResultsDataTable({
     },
     {
       refetchInterval: shouldRefetch ? 4000 : undefined,
-    }
+    },
   );
-  console.log("isLoading", isLoading);
   useEffect(() => {
     if (isDemo) return;
 
     setShouldRefetch(
       battleResults?.some(
         (battle) =>
-          battle.status === "in_progress" || battle.status === "pending"
-      ) ?? false
+          battle.status === "in_progress" || battle.status === "pending",
+      ) ?? false,
     );
   }, [battleResults, isDemo]);
 
@@ -312,6 +382,8 @@ export default function BattleResultsDataTable({
       databaseId1: string;
       databaseId2: string;
       queries: string;
+      config1?: string;
+      config2?: string;
     } | null;
   }>({
     open: false,
@@ -338,11 +410,13 @@ export default function BattleResultsDataTable({
             databaseId1: battle.databaseId1,
             databaseId2: battle.databaseId2,
             queries: battle.queries,
+            config1: battle.config1 ?? undefined,
+            config2: battle.config2 ?? undefined,
           },
         });
       }
     },
-    [battleResults]
+    [battleResults],
   );
 
   const handleNewBattle = useCallback(() => {
@@ -356,7 +430,7 @@ export default function BattleResultsDataTable({
     (id: string) => {
       deleteBattleMutation.mutate({ battleId: id });
     },
-    [deleteBattleMutation]
+    [deleteBattleMutation],
   );
 
   const table = useBattleTable({
@@ -380,7 +454,7 @@ export default function BattleResultsDataTable({
             onChange={(event) =>
               table.getColumn("label")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm"
+            className="max-w-sm bg-white"
           />
 
           <div className="flex items-center space-x-2">
@@ -450,7 +524,7 @@ export default function BattleResultsDataTable({
                               ? null
                               : flexRender(
                                   header.column.columnDef.header,
-                                  header.getContext()
+                                  header.getContext(),
                                 )}
                           </TableHead>
                         );
@@ -479,7 +553,7 @@ export default function BattleResultsDataTable({
                           <TableCell key={cell.id} className="p-2">
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </TableCell>
                         ))}
