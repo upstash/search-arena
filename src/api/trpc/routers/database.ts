@@ -3,10 +3,9 @@ import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { PROVIDERS, PROVIDER_KEYS, isValidProvider } from "@/lib/providers";
 
 // Credentials schema - union of all provider credentials from PROVIDERS registry
-const credentialsSchema = z.union([
-  PROVIDERS.upstash_search.credentialsSchema,
-  PROVIDERS.algolia.credentialsSchema,
-]);
+const credentialsSchema = z.union(
+  Object.values(PROVIDERS).map((val) => val.credentialsSchema),
+);
 
 // Input validation schemas
 const createDatabaseSchema = z.object({

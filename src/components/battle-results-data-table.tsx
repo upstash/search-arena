@@ -274,6 +274,8 @@ const useBattleTable = ({
                 parts.push(`rerank: ${config.reranking ? "on" : "off"}`);
               if (config.semanticWeight !== undefined)
                 parts.push(`sw: ${config.semanticWeight}`);
+              if (config.inputEnrichment !== undefined)
+                parts.push(`ie: ${config.inputEnrichment ? "on" : "off"}`);
               if (config.namespace) parts.push(`ns: ${config.namespace}`);
               return parts.length > 0 ? parts.join(", ") : "default";
             } catch {
@@ -282,7 +284,7 @@ const useBattleTable = ({
           };
 
           return (
-            <div className="text-xs text-gray-600 space-y-1 max-w-[200px]">
+            <div className="text-xs text-gray-600 space-y-1 max-w-[250px]">
               <SimpleTooltip content={config1 || "No config"}>
                 <div className="truncate">
                   <span className="text-blue-600 font-medium">DB1:</span>{" "}
@@ -380,6 +382,8 @@ export default function BattleResultsDataTable({
       databaseId1: string;
       databaseId2: string;
       queries: string;
+      config1?: string;
+      config2?: string;
     } | null;
   }>({
     open: false,
@@ -406,6 +410,8 @@ export default function BattleResultsDataTable({
             databaseId1: battle.databaseId1,
             databaseId2: battle.databaseId2,
             queries: battle.queries,
+            config1: battle.config1 ?? undefined,
+            config2: battle.config2 ?? undefined,
           },
         });
       }

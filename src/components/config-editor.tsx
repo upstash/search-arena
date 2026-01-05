@@ -1,7 +1,7 @@
 "use client";
 
 import Editor from "@monaco-editor/react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useMemo } from "react";
 // import type { editor } from "monaco-editor";
 
 interface ConfigEditorProps {
@@ -11,17 +11,42 @@ interface ConfigEditorProps {
   readOnly?: boolean;
 }
 
+// Helper to format JSON string with proper indentation
+function formatJson(jsonString: string): string {
+  try {
+    const parsed = JSON.parse(jsonString);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    // If it's not valid JSON, return as-is
+    return jsonString;
+  }
+}
+
 export function ConfigEditor({
   value,
   onChange,
   height = "120px",
   readOnly = false,
 }: ConfigEditorProps) {
-  // const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const hasFormatted = useRef(false);
 
-  // const handleEditorDidMount: OnMount = useCallback((editor) => {
-  //   editorRef.current = editor;
-  // }, []);
+  // Format JSON on initial mount
+  useEffect(() => {
+    if (!hasFormatted.current && value) {
+      const formatted = formatJson(value);
+      if (formatted !== value) {
+        onChange(formatted);
+      }
+      hasFormatted.current = true;
+    }
+  }, [value, onChange]);
+
+  // Reset the format flag when value is completely cleared (new modal)
+  useEffect(() => {
+    if (!value) {
+      hasFormatted.current = false;
+    }
+  }, [value]);
 
   const handleChange = useCallback(
     (newValue: string | undefined) => {
@@ -37,7 +62,6 @@ export function ConfigEditor({
         defaultLanguage="json"
         value={value}
         onChange={handleChange}
-        // onMount={handleEditorDidMount}
         options={{
           minimap: { enabled: false },
           scrollBeyondLastLine: false,

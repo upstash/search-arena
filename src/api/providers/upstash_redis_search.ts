@@ -34,22 +34,39 @@ export class UpstashRedisSearchProvider implements SearchProvider {
 
       // Use index from config, or fall back to defaultIndex from credentials
       const indexName = this.config.index ?? this.credentials.defaultIndex;
+      if (!indexName) throw new Error("No index name provided");
       const index = redis.search.index(indexName);
 
-      // Perform the search query with fuzzy matching on title and phrase matching on description
+      // Helper to recursively replace "{{query}}" placeholders with the actual query
+      const interpolateQuery = (obj: unknown): unknown => {
+        if (typeof obj === "string") {
+          return obj === "{{query}}"
+            ? query
+            : obj.replace(/\{\{query\}\}/g, query);
+        }
+        if (Array.isArray(obj)) {
+          return obj.map(interpolateQuery);
+        }
+        if (obj && typeof obj === "object") {
+          return Object.fromEntries(
+            Object.entries(obj).map(([k, v]) => [k, interpolateQuery(v)]),
+          );
+        }
+        return obj;
+      };
+
+      // Interpolate {{query}} placeholders in the filter config
+      const filter = interpolateQuery(this.config.filter) as any;
+
+      console.log("params", {
+        filter,
+        limit: this.config.topK,
+      });
+
+      // Perform the search query
       const res = await index.query({
-        filter: {
-          title: {
-            $fuzzy: {
-              value: query,
-              distance: 3,
-            },
-            $boost: 2,
-          },
-          description: {
-            $phrase: query,
-          },
-        },
+        filter,
+        limit: this.config.topK,
       });
 
       // Transform results to the common SearchResult format

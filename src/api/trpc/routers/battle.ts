@@ -9,10 +9,9 @@ import { after } from "next/server";
 import { PROVIDERS } from "@/lib/providers";
 
 // Search config schema - union of all provider configs from PROVIDERS registry
-const searchConfigSchema = z.union([
-  PROVIDERS.upstash_search.searchConfigSchema,
-  PROVIDERS.algolia.searchConfigSchema,
-]);
+const searchConfigSchema = z.union(
+  Object.values(PROVIDERS).map((p) => p.searchConfigSchema),
+);
 
 // Input validation schemas
 const createBattleSchema = z.object({

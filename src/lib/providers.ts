@@ -10,7 +10,7 @@ export const PROVIDERS = {
   upstash_search: {
     name: "Upstash Search",
     color: colors.emerald,
-    credentialsSchema: z.object({
+    credentialsSchema: z.strictObject({
       url: z.string().url(),
       token: z.string().min(1),
       defaultNamespace: z.string().optional(),
@@ -42,15 +42,27 @@ export const PROVIDERS = {
   upstash_redis_search: {
     name: "Redis Search",
     color: colors.red,
-    credentialsSchema: z.object({
+    credentialsSchema: z.strictObject({
       url: z.string().url(),
       token: z.string().min(1),
       defaultIndex: z.string().min(1).optional(),
     }),
     searchConfigSchema: z.strictObject({
       index: z.string().optional(),
+      topK: z.number().int().min(1).max(500),
+      filter: z.record(z.string(), z.unknown()),
     }),
-    defaultConfig: {},
+    defaultConfig: {
+      index: "optional-index-name",
+      topK: 10,
+      filter: {
+        title: {
+          $eq: "{{query}}",
+          $boost: 3,
+        },
+        description: "{{query}}",
+      },
+    },
     credentialsTemplate: JSON.stringify(
       {
         url: "https://your-database.upstash.io",
@@ -65,7 +77,7 @@ export const PROVIDERS = {
   algolia: {
     name: "Algolia",
     color: colors.blue,
-    credentialsSchema: z.object({
+    credentialsSchema: z.strictObject({
       applicationId: z.string().min(1),
       apiKey: z.string().min(1),
       defaultIndex: z.string().min(1).optional(),

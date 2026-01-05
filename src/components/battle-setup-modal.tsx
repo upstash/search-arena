@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,6 +38,8 @@ interface BattleSetupModalProps {
     databaseId1: string;
     databaseId2: string;
     queries: string;
+    config1?: string;
+    config2?: string;
   };
 }
 
@@ -109,18 +111,34 @@ export function BattleSetupModal({
     return db?.provider;
   }, [databases, watchedDatabaseId2]);
 
-  // Update default configs when database selection changes
+  // Track if we're in initial edit mode to avoid overwriting initialData configs
+  const skipConfigUpdateRef = useRef<{ db1: boolean; db2: boolean }>({
+    db1: false,
+    db2: false,
+  });
+
+  // Update default configs when database selection changes (but not on initial edit load)
   useEffect(() => {
     if (db1Provider) {
-      setValue("config1", getDefaultConfigJson(db1Provider));
-      setConfig1Error(null);
+      if (skipConfigUpdateRef.current.db1) {
+        // Skip this update - we just loaded initialData
+        skipConfigUpdateRef.current.db1 = false;
+      } else {
+        setValue("config1", getDefaultConfigJson(db1Provider));
+        setConfig1Error(null);
+      }
     }
   }, [db1Provider, setValue]);
 
   useEffect(() => {
     if (db2Provider) {
-      setValue("config2", getDefaultConfigJson(db2Provider));
-      setConfig2Error(null);
+      if (skipConfigUpdateRef.current.db2) {
+        // Skip this update - we just loaded initialData
+        skipConfigUpdateRef.current.db2 = false;
+      } else {
+        setValue("config2", getDefaultConfigJson(db2Provider));
+        setConfig2Error(null);
+      }
     }
   }, [db2Provider, setValue]);
 
@@ -139,19 +157,31 @@ export function BattleSetupModal({
   }, [watchedConfig2, db2Provider]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Reset the skip flags when modal closes
+      skipConfigUpdateRef.current = { db1: false, db2: false };
+      return;
+    }
 
     // When modal opens, set initial values
     if (initialData) {
-      // Edit mode: use initial data
+      // Edit mode: use initial data, including configs if provided
+      // Set skip flags so the provider-change effects don't overwrite our configs
+      if (initialData.config1) {
+        skipConfigUpdateRef.current.db1 = true;
+      }
+      if (initialData.config2) {
+        skipConfigUpdateRef.current.db2 = true;
+      }
+
       const db1 = databases?.find((d) => d.id === initialData.databaseId1);
       const db2 = databases?.find((d) => d.id === initialData.databaseId2);
       reset({
         label: initialData.label,
         databaseId1: initialData.databaseId1,
         databaseId2: initialData.databaseId2,
-        config1: getDefaultConfigJson(db1?.provider),
-        config2: getDefaultConfigJson(db2?.provider),
+        config1: initialData.config1 ?? getDefaultConfigJson(db1?.provider),
+        config2: initialData.config2 ?? getDefaultConfigJson(db2?.provider),
         queries: initialData.queries,
         ratingCount: 1,
       });
