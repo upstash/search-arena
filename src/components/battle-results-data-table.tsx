@@ -130,11 +130,10 @@ const useBattleTable = ({
           const db = row.original.database1;
           return (
             <div className="flex items-center space-x-2">
-              <SimpleTooltip content={<ProviderBadge provider={db.provider} />}>
-                <span className="text-sm font-medium truncate max-w-[400px]">
-                  {db.label}
-                </span>
-              </SimpleTooltip>
+              <span className="text-sm font-medium truncate max-w-[300px]">
+                {db.label}
+              </span>
+              <ProviderBadge provider={db.provider} />
             </div>
           );
         },
@@ -146,11 +145,10 @@ const useBattleTable = ({
           const db = row.original.database2;
           return (
             <div className="flex items-center space-x-2">
-              <SimpleTooltip content={<ProviderBadge provider={db.provider} />}>
-                <span className="text-sm font-medium truncate max-w-[400px]">
-                  {db.label}
-                </span>
-              </SimpleTooltip>
+              <span className="text-sm font-medium truncate max-w-[300px]">
+                {db.label}
+              </span>
+              <ProviderBadge provider={db.provider} />
             </div>
           );
         },
@@ -172,23 +170,22 @@ const useBattleTable = ({
         },
       },
       {
-        header: "Query Count",
+        header: "Queries",
         cell: ({ row }) => {
           const battle = row.original;
-          return (
-            <span className="text-sm text-gray-700">
-              {battle.queries.split("\n").length}
-            </span>
-          );
-        },
-      },
-      {
-        header: "Attempts",
-        cell: ({ row }) => {
-          const battle = row.original;
-          return (
-            <span className="text-sm text-gray-700">{battle.ratingCount}</span>
-          );
+          const queryCount = battle.queries.split("\n").length;
+          const attempts = battle.ratingCount;
+
+          if (attempts > 1) {
+            const total = queryCount * attempts;
+            return (
+              <span className="text-sm text-gray-700">
+                {queryCount} × {attempts} = {total}
+              </span>
+            );
+          }
+
+          return <span className="text-sm text-gray-700">{queryCount}</span>;
         },
       },
       {
@@ -364,7 +361,7 @@ const useBattleTable = ({
         },
       },
     ],
-    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle]
+    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle],
   );
 
   const table = useReactTable<BattleResult>({
@@ -393,7 +390,7 @@ export default function BattleResultsDataTable({
     },
     {
       refetchInterval: shouldRefetch ? 4000 : undefined,
-    }
+    },
   );
   useEffect(() => {
     if (isDemo) return;
@@ -401,8 +398,8 @@ export default function BattleResultsDataTable({
     setShouldRefetch(
       battleResults?.some(
         (battle) =>
-          battle.status === "in_progress" || battle.status === "pending"
-      ) ?? false
+          battle.status === "in_progress" || battle.status === "pending",
+      ) ?? false,
     );
   }, [battleResults, isDemo]);
 
@@ -447,7 +444,7 @@ export default function BattleResultsDataTable({
         });
       }
     },
-    [battleResults]
+    [battleResults],
   );
 
   const handleNewBattle = useCallback(() => {
@@ -461,7 +458,7 @@ export default function BattleResultsDataTable({
     (id: string) => {
       deleteBattleMutation.mutate({ battleId: id });
     },
-    [deleteBattleMutation]
+    [deleteBattleMutation],
   );
 
   const table = useBattleTable({
@@ -555,7 +552,7 @@ export default function BattleResultsDataTable({
                               ? null
                               : flexRender(
                                   header.column.columnDef.header,
-                                  header.getContext()
+                                  header.getContext(),
                                 )}
                           </TableHead>
                         );
@@ -584,7 +581,7 @@ export default function BattleResultsDataTable({
                           <TableCell key={cell.id} className="p-2">
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </TableCell>
                         ))}

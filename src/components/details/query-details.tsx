@@ -44,14 +44,14 @@ export function QueryDetails({
 
   // Get available rating indices
   const ratingIndices = Array.from(
-    new Set(selectedQuery.results.map((r) => r.ratingIndex || 1))
+    new Set(selectedQuery.results.map((r) => r.ratingIndex || 1)),
   ).sort((a, b) => a - b);
 
   const hasMultipleRatings = ratingIndices.length > 1;
 
   // Filter results for display
   const displayedResults = selectedQuery.results.filter(
-    (r) => (r.ratingIndex || 1) === selectedRatingIndex
+    (r) => (r.ratingIndex || 1) === selectedRatingIndex,
   );
 
   return (
@@ -115,13 +115,13 @@ export function QueryDetails({
                       (res) =>
                         res.ratingIndex === idx &&
                         res.databaseId === battle.databaseId1 &&
-                        res.configIndex === 1
+                        res.configIndex === 1,
                     );
                     const r2 = selectedQuery.results.filter(
                       (res) =>
                         res.ratingIndex === idx &&
                         res.databaseId === battle.databaseId2 &&
-                        res.configIndex === 2
+                        res.configIndex === 2,
                     );
 
                     if (r1.length > 1 || r2.length > 1) {
@@ -129,7 +129,7 @@ export function QueryDetails({
                         "Multiple results for rating index " +
                           idx +
                           " " +
-                          JSON.stringify(selectedQuery.results)
+                          JSON.stringify(selectedQuery.results),
                       );
                     }
 
@@ -359,7 +359,7 @@ const QueryDetailCard = ({
         transition={{ delay: index * 0.02 }}
         className={cn(
           "text-gray-600 mb-1 wrap-break-word",
-          expanded ? "line-clamp-none" : "line-clamp-3"
+          expanded ? "line-clamp-none" : "line-clamp-3",
         )}
       >
         {result.description}
@@ -447,7 +447,7 @@ const LlmUsageBadge = ({
 const SearchMetadataDisplay = ({ metadata }: { metadata: SearchMetadata }) => {
   // Filter out processing time and total results, only show meaningful metadata
   const filteredMetadata = Object.entries(metadata).filter(
-    ([key]) => !["totalResults", "processingTime", "usage"].includes(key)
+    ([key]) => !["totalResults", "processingTime", "usage"].includes(key),
   );
 
   if (filteredMetadata.length === 0) {

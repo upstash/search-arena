@@ -42,7 +42,11 @@ export const battleRouter = router({
   getById: ratelimitProcedure("get", 100)
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      const res = await ctx.battleService.getBattleById(input.id);
+      const res = await ctx.battleService.getBattleById(
+        input.id,
+        ctx.sessionId,
+        ctx.isAdmin,
+      );
 
       return res;
     }),
@@ -83,6 +87,18 @@ export const battleRouter = router({
       return ctx.battleService.editBattle({
         battleId,
         isDemo,
+      });
+    }),
+
+  // Update battle label (owner or admin only)
+  updateLabel: publicProcedure
+    .input(z.object({ battleId: z.uuid(), label: z.string().min(1) }))
+    .mutation(async ({ ctx, input: { battleId, label } }) => {
+      return ctx.battleService.updateBattleLabel({
+        battleId,
+        label,
+        sessionId: ctx.sessionId,
+        isAdmin: ctx.isAdmin,
       });
     }),
 });

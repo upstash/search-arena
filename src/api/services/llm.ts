@@ -69,6 +69,10 @@ export class LLMService {
     const formatOutput = (results: SearchResult[]) => {
       const deduplicatedResults = deduplicateByDescription(results);
 
+      if (deduplicatedResults.length === 0) {
+        return "No results returned";
+      }
+
       // Get the first 10 results
       return deduplicatedResults
         .map((result, index) => {
@@ -130,6 +134,8 @@ Provide your evaluation in the following JSON format only:
         model: openrouter(this.modelName),
         prompt: prompt,
       });
+      console.log("PROMPT:", prompt);
+      console.log("RESULT:", result);
 
       text = result.text;
 
@@ -189,11 +195,11 @@ Provide your evaluation in the following JSON format only:
       const jsonResponse = JSON.parse(jsonMatch[0]);
       const db1Failed =
         !jsonResponse.db1 ||
-        !jsonResponse.db1.score ||
+        jsonResponse.db1.score === undefined ||
         !jsonResponse.db1.feedback;
       const db2Failed =
         !jsonResponse.db2 ||
-        !jsonResponse.db2.score ||
+        jsonResponse.db2.score === undefined ||
         !jsonResponse.db2.feedback;
 
       return {

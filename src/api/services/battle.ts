@@ -419,13 +419,10 @@ export class BattleService {
   /**
    * Get battle details by ID
    */
-  async getBattleById(battleId: string) {
+  async getBattleById(battleId: string, sessionId?: string, isAdmin?: boolean) {
     const battle = await db.query.battles.findFirst({
       // For all, battleId is checked
       where: eq(schema.battles.id, battleId),
-      columns: {
-        sessionId: false,
-      },
       with: {
         database1: {
           columns: {
@@ -450,7 +447,13 @@ export class BattleService {
     // If battle not found, return null
     if (!battle) throw new Error(`Battle ${battleId} not found`);
 
-    return battle;
+    // Check if the user can edit (is owner or admin)
+    const isOwner = sessionId && battle.sessionId === sessionId;
+    const canEdit = isOwner || isAdmin || false;
+
+    // Return battle without sessionId but with canEdit flag
+    const { sessionId: _sessionId, ...battleWithoutSessionId } = battle;
+    return { ...battleWithoutSessionId, canEdit };
   }
 
   /**
@@ -546,6 +549,49 @@ export class BattleService {
       .set({ isDemo })
       .where(eq(schema.battles.id, battleId))
       .execute();
+  }
+
+  /**
+   * Updates the battle label (owner or admin only)
+   *
+   * @param battleId ID of the battle to update
+   * @param label New label for the battle
+   * @param sessionId Session ID of the user making the request
+   * @param isAdmin Whether the user is an admin
+   */
+  async updateBattleLabel({
+    battleId,
+    label,
+    sessionId,
+    isAdmin,
+  }: {
+    battleId: string;
+    label: string;
+    sessionId?: string;
+    isAdmin?: boolean;
+  }) {
+    // Get the battle to check ownership
+    const battle = await db.query.battles.findFirst({
+      where: eq(schema.battles.id, battleId),
+    });
+
+    if (!battle) {
+      throw new Error(`Battle ${battleId} not found`);
+    }
+
+    // Check if the user is the owner or an admin
+    const isOwner = sessionId && battle.sessionId === sessionId;
+    if (!isOwner && !isAdmin) {
+      throw new Error("You don't have permission to edit this battle");
+    }
+
+    await db
+      .update(schema.battles)
+      .set({ label })
+      .where(eq(schema.battles.id, battleId))
+      .execute();
+
+    return { success: true };
   }
 
   /**

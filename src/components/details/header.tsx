@@ -120,7 +120,7 @@ const CopyLinkButton = () => {
     // Replace localhost:* with production URL
     const productionUrl = currentUrl.replace(
       /http:\/\/localhost:\d+/,
-      "https://searcharena.vercel.app"
+      "https://searcharena.vercel.app",
     );
 
     navigator.clipboard.writeText(productionUrl).then(() => {
