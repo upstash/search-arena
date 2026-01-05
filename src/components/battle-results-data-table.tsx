@@ -34,6 +34,7 @@ import { trpc } from "@/api/trpc/client";
 import { BattleResult } from "@/api/trpc";
 import { ProviderBadge } from "./provider-badge";
 import { SimpleTooltip } from "./ui/simple-tooltip";
+import { PROVIDERS, isValidProvider } from "@/lib/providers";
 import { motion, AnimatePresence } from "motion/react";
 import { BattleSetupModal } from "./battle-setup-modal";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -215,10 +216,20 @@ const useBattleTable = ({
           // Check if both scores are -1 (LLM disabled)
           const isLLMDisabled = score1 === -1 && score2 === -1;
 
+          const db1Color = isValidProvider(battle.database1.provider)
+            ? PROVIDERS[battle.database1.provider].color
+            : undefined;
+          const db2Color = isValidProvider(battle.database2.provider)
+            ? PROVIDERS[battle.database2.provider].color
+            : undefined;
+
           return (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-bold text-blue-600">
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: db1Color?.["600"] }}
+                >
                   {score1 === -1 ? "-" : battle.meanScoreDb1}
                 </span>
                 {!isLLMDisabled && score1 > score2 && (
@@ -227,7 +238,10 @@ const useBattleTable = ({
               </div>
               <span className="text-xs text-gray-400">vs</span>
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-bold text-green-600">
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: db2Color?.["600"] }}
+                >
                   {score2 === -1 ? "-" : battle.meanScoreDb2}
                 </span>
                 {!isLLMDisabled && score2 > score1 && (
@@ -283,17 +297,34 @@ const useBattleTable = ({
             }
           };
 
+          const configDb1Color = isValidProvider(battle.database1.provider)
+            ? PROVIDERS[battle.database1.provider].color
+            : undefined;
+          const configDb2Color = isValidProvider(battle.database2.provider)
+            ? PROVIDERS[battle.database2.provider].color
+            : undefined;
+
           return (
             <div className="text-xs text-gray-600 space-y-1 max-w-[250px]">
               <SimpleTooltip content={config1 || "No config"}>
                 <div className="truncate">
-                  <span className="text-blue-600 font-medium">DB1:</span>{" "}
+                  <span
+                    className="font-medium"
+                    style={{ color: configDb1Color?.["600"] }}
+                  >
+                    DB1:
+                  </span>{" "}
                   {formatConfig(config1)}
                 </div>
               </SimpleTooltip>
               <SimpleTooltip content={config2 || "No config"}>
                 <div className="truncate">
-                  <span className="text-green-600 font-medium">DB2:</span>{" "}
+                  <span
+                    className="font-medium"
+                    style={{ color: configDb2Color?.["600"] }}
+                  >
+                    DB2:
+                  </span>{" "}
                   {formatConfig(config2)}
                 </div>
               </SimpleTooltip>
@@ -333,7 +364,7 @@ const useBattleTable = ({
         },
       },
     ],
-    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle],
+    [isDemo, isAdmin, handleEditBattle, handleDeleteBattle]
   );
 
   const table = useReactTable<BattleResult>({
@@ -362,7 +393,7 @@ export default function BattleResultsDataTable({
     },
     {
       refetchInterval: shouldRefetch ? 4000 : undefined,
-    },
+    }
   );
   useEffect(() => {
     if (isDemo) return;
@@ -370,8 +401,8 @@ export default function BattleResultsDataTable({
     setShouldRefetch(
       battleResults?.some(
         (battle) =>
-          battle.status === "in_progress" || battle.status === "pending",
-      ) ?? false,
+          battle.status === "in_progress" || battle.status === "pending"
+      ) ?? false
     );
   }, [battleResults, isDemo]);
 
@@ -416,7 +447,7 @@ export default function BattleResultsDataTable({
         });
       }
     },
-    [battleResults],
+    [battleResults]
   );
 
   const handleNewBattle = useCallback(() => {
@@ -430,7 +461,7 @@ export default function BattleResultsDataTable({
     (id: string) => {
       deleteBattleMutation.mutate({ battleId: id });
     },
-    [deleteBattleMutation],
+    [deleteBattleMutation]
   );
 
   const table = useBattleTable({
@@ -524,7 +555,7 @@ export default function BattleResultsDataTable({
                               ? null
                               : flexRender(
                                   header.column.columnDef.header,
-                                  header.getContext(),
+                                  header.getContext()
                                 )}
                           </TableHead>
                         );
@@ -553,7 +584,7 @@ export default function BattleResultsDataTable({
                           <TableCell key={cell.id} className="p-2">
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext(),
+                              cell.getContext()
                             )}
                           </TableCell>
                         ))}

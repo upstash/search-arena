@@ -75,9 +75,11 @@ const indexName = process.env.UPSTASH_REDIS_INDEX!;
 
 // Define the schema for the search index
 const schema = s.object({
-  title: s.string().noTokenize().noStem(),
-  description: s.string().noTokenize().noStem(),
+  title: s.string(),
+  description: s.string(),
 });
+
+console.log("schema is", JSON.stringify(schema))
 
 // Define the type for data items
 interface DataItem {
@@ -115,9 +117,9 @@ async function upsertData() {
     const index = redis.search.index(indexName, schema);
     const indexInfo = await index.describe();
 
-    console.log("Index info:", indexInfo);
 
     if (indexInfo.name) {
+      console.log("Old index found:", indexInfo);
       console.log(`Deleting index ${indexName}`);
       await index.drop()
     }
@@ -128,7 +130,7 @@ async function upsertData() {
       name: indexName,
       schema: schema,
     });
-    console.log("Index created successfully");
+    console.log("Index created successfully:", await index.describe());
 
     // Upsert data in batches
     const BATCH_SIZE = 500;

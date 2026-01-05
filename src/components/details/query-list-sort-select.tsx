@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowUpDown } from "lucide-react";
 import { getDatabaseStats } from "@/lib/stats";
+import { PROVIDERS, isValidProvider } from "@/lib/providers";
 
 export type SortOptions =
   | "default"
@@ -29,6 +30,13 @@ export function QueryListSortSelect({
   setSortBy: (value: SortOptions) => void;
   battle: BattleResult;
 }) {
+  const db1Color = isValidProvider(battle.database1.provider)
+    ? PROVIDERS[battle.database1.provider].color
+    : undefined;
+  const db2Color = isValidProvider(battle.database2.provider)
+    ? PROVIDERS[battle.database2.provider].color
+    : undefined;
+
   return (
     <div className="p-3 border-b bg-gray-50">
       <div className="flex items-center justify-between mb-2">
@@ -45,27 +53,57 @@ export function QueryListSortSelect({
         <SelectContent>
           <SelectItem value="default">Default Order</SelectItem>
           <SelectItem value="db1-score">
-            <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db1Color?.["100"] }}
+            >
+              {battle.database1.label}
+            </code>{" "}
             Score ↓
           </SelectItem>
           <SelectItem value="db1-score-asc">
-            <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db1Color?.["100"] }}
+            >
+              {battle.database1.label}
+            </code>{" "}
             Score ↑
           </SelectItem>
           <SelectItem value="db2-score">
-            <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db2Color?.["100"] }}
+            >
+              {battle.database2.label}
+            </code>{" "}
             Score ↓
           </SelectItem>
           <SelectItem value="db2-score-asc">
-            <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db2Color?.["100"] }}
+            >
+              {battle.database2.label}
+            </code>{" "}
             Score ↑
           </SelectItem>
           <SelectItem value="score-diff-1">
-            <code className="bg-blue-100 px-1">{battle.database1.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db1Color?.["100"] }}
+            >
+              {battle.database1.label}
+            </code>{" "}
             Overperforms ↓
           </SelectItem>
           <SelectItem value="score-diff-2">
-            <code className="bg-green-100 px-1">{battle.database2.label}</code>{" "}
+            <code
+              className="px-1"
+              style={{ backgroundColor: db2Color?.["100"] }}
+            >
+              {battle.database2.label}
+            </code>{" "}
             Overperforms ↓
           </SelectItem>
           <SelectItem value="diff">Diff ↓</SelectItem>

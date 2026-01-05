@@ -1,15 +1,25 @@
 import { trpc } from "@/api/trpc/client";
-import { Trophy } from "lucide-react";
+import { Trophy, Link2, Check } from "lucide-react";
 import { motion } from "motion/react";
 import { ProviderBadge } from "../provider-badge";
 import { Checkbox } from "../ui/checkbox";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { SimpleTooltip } from "../ui/simple-tooltip";
+import { Button } from "../ui/button";
+import { useState } from "react";
+import { PROVIDERS, isValidProvider } from "@/lib/providers";
 
 export const BattleHeader = ({ battleId }: { battleId: string }) => {
   const { data: battle } = trpc.battle.getById.useQuery({ id: battleId });
 
   if (!battle) return;
+
+  const db1Color = isValidProvider(battle.database1.provider)
+    ? PROVIDERS[battle.database1.provider].color
+    : undefined;
+  const db2Color = isValidProvider(battle.database2.provider)
+    ? PROVIDERS[battle.database2.provider].color
+    : undefined;
 
   return (
     <motion.div
@@ -27,11 +37,11 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
             <Trophy className="h-3 w-3 text-yellow-500" />
           )}
       </div>
-      <div className="text-2xl font-bold text-blue-600">
+      <div className="text-2xl font-bold" style={{ color: db1Color?.["600"] }}>
         {Number(battle.meanScoreDb1) === -1 ? undefined : battle.meanScoreDb1}
       </div>
       <div className="text-2xl font-bold text-gray-600">vs</div>
-      <div className="text-2xl font-bold text-green-600">
+      <div className="text-2xl font-bold" style={{ color: db2Color?.["600"] }}>
         {Number(battle.meanScoreDb2) === -1 ? undefined : battle.meanScoreDb2}
       </div>
       <div className="flex items-center space-x-2">
@@ -59,6 +69,7 @@ export const BattleHeader = ({ battleId }: { battleId: string }) => {
         }
       })()}
 
+      <CopyLinkButton />
       <BattleDemoCheckbox battleId={battleId} />
     </motion.div>
   );
@@ -97,6 +108,47 @@ export const BattleDemoCheckbox = ({ battleId }: { battleId: string }) => {
         />
         <label htmlFor="demo">Example</label>
       </div>
+    </SimpleTooltip>
+  );
+};
+
+const CopyLinkButton = () => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    const currentUrl = window.location.href;
+    // Replace localhost:* with production URL
+    const productionUrl = currentUrl.replace(
+      /http:\/\/localhost:\d+/,
+      "https://searcharena.vercel.app"
+    );
+
+    navigator.clipboard.writeText(productionUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <SimpleTooltip content="Copy link to share this battle">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleCopyLink}
+        className="ml-2"
+      >
+        {copied ? (
+          <>
+            <Check className="h-3 w-3" />
+            Copied!
+          </>
+        ) : (
+          <>
+            <Link2 className="h-3 w-3" />
+            Copy Link
+          </>
+        )}
+      </Button>
     </SimpleTooltip>
   );
 };
